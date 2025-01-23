@@ -8,6 +8,7 @@ from contextlib import nullcontext as does_not_raise
 
 import numpy as np
 import pytest
+from numpy.testing import assert_allclose
 
 
 @pytest.mark.parametrize(
@@ -47,7 +48,7 @@ def test_rootzonestress(method, expected_chi):
     optchi_class = OPTIMAL_CHI_CLASS_REGISTRY[method]
     optchi = optchi_class(env=env)
 
-    assert np.allclose(optchi.chi, expected_chi)
+    assert_allclose(optchi.chi, expected_chi)
 
 
 @pytest.mark.parametrize(

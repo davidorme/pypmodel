@@ -4,6 +4,7 @@ from contextlib import nullcontext as does_not_raise
 
 import numpy as np
 import pytest
+from numpy.testing import assert_allclose
 
 
 @pytest.mark.parametrize(
@@ -51,7 +52,7 @@ def test_memory_effect(inputs, alpha):
     # first (time) axis.
     expected = np.tensordot(coef, inputs, axes=1)
 
-    assert np.allclose(result, expected)
+    assert_allclose(result, expected)
 
 
 @pytest.mark.parametrize(
@@ -88,7 +89,7 @@ def test_memory_effect_chunked(inputs_whole, alpha):
         inputs_chunk2, previous_values=result_chunk1[-1], alpha=alpha
     )
 
-    assert np.allclose(result_whole[-1], result_chunk2[-1])
+    assert_allclose(result_whole[-1], result_chunk2[-1])
 
 
 @pytest.mark.parametrize(
@@ -135,4 +136,4 @@ def test_memory_effect_inputs(inputs, allow_holdover, context_manager, expected,
     with context_manager:
         results = memory_effect(inputs, allow_holdover=allow_holdover, alpha=0.1)
 
-        assert np.allclose(results, expected)
+        assert_allclose(results, expected)

@@ -5,6 +5,7 @@ from importlib import resources
 
 import numpy as np
 import pytest
+from numpy.testing import assert_allclose
 
 
 @pytest.fixture
@@ -38,7 +39,7 @@ def test_calc_vp_sat(bigleaf, formula) -> None:
     results = calc_vp_sat(TEMP, const)
     expected = np.array(bigleaf["calc_vp_sat"][formula])
 
-    assert np.allclose(results, expected)
+    assert_allclose(results, expected)
 
 
 @pytest.mark.parametrize(
@@ -54,7 +55,7 @@ def test_convert_vp_to_vpd(bigleaf, formula):
     results = convert_vp_to_vpd(VP, TEMP, const)
     expected = np.array(bigleaf["convert_vp_to_vpd"][formula])
 
-    assert np.allclose(results, expected)
+    assert_allclose(results, expected)
 
 
 @pytest.mark.parametrize(
@@ -70,7 +71,7 @@ def test_convert_rh_to_vpd(bigleaf, formula):
     results = convert_rh_to_vpd(RH, TEMP, const)
     expected = np.array(bigleaf["convert_rh_to_vpd"][formula])
 
-    assert np.allclose(results, expected)
+    assert_allclose(results, expected)
 
 
 def test_convert_sh_to_vp(bigleaf):
@@ -81,7 +82,7 @@ def test_convert_sh_to_vp(bigleaf):
     results = convert_sh_to_vp(SH, PATM)
     expected = np.array(bigleaf["convert_sh_to_vp"])
 
-    assert np.allclose(results, expected)
+    assert_allclose(results, expected)
 
 
 @pytest.mark.parametrize(
@@ -97,4 +98,4 @@ def test_convert_sh_to_vpd(bigleaf, formula):
     results = convert_sh_to_vpd(SH, TEMP, PATM, const)
     expected = np.array(bigleaf["convert_sh_to_vpd"][formula])
 
-    assert np.allclose(results, expected)
+    assert_allclose(results, expected)

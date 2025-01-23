@@ -2,6 +2,7 @@
 
 import numpy as np
 import pytest
+from numpy.testing import assert_allclose
 
 
 @pytest.fixture
@@ -46,14 +47,14 @@ def test_QuantumYieldFixed(quantum_yield_env, reference_kphio, expected_kphio):
     )
 
     # Should be a scalar
-    assert np.allclose(qy.kphio, np.array([expected_kphio]))
+    assert_allclose(qy.kphio, np.array([expected_kphio]))
 
     qy2 = QUANTUM_YIELD_CLASS_REGISTRY["fixed"](
         env=quantum_yield_env,
         reference_kphio=reference_kphio,
     )
 
-    assert np.allclose(qy2.kphio, np.array([expected_kphio]))
+    assert_allclose(qy2.kphio, np.array([expected_kphio]))
 
 
 @pytest.mark.parametrize(
@@ -102,13 +103,13 @@ def test_QuantumYieldTemperature(
     # The expected_kphio_factor values are the output of the previous implementation
     # (calc_ftemp_kphio), which returned the temperature factors that then needed
     # multiplying by the reference kphio.
-    assert np.allclose(qy.kphio, qy.reference_kphio * expected_kphio_factor)
+    assert_allclose(qy.kphio, qy.reference_kphio * expected_kphio_factor)
 
     qy2 = QUANTUM_YIELD_CLASS_REGISTRY["temperature"](
         env=quantum_yield_env, reference_kphio=reference_kphio, use_c4=use_c4
     )
 
-    assert np.allclose(qy2.kphio, qy2.reference_kphio * expected_kphio_factor)
+    assert_allclose(qy2.kphio, qy2.reference_kphio * expected_kphio_factor)
 
 
 @pytest.mark.parametrize(
@@ -156,11 +157,11 @@ def test_QuantumYieldSandoval(quantum_yield_env, reference_kphio, expected_kphio
         reference_kphio=reference_kphio,
     )
 
-    assert np.allclose(qy.kphio, expected_kphio)
+    assert_allclose(qy.kphio, expected_kphio, rtol=1e-06)
 
     qy2 = QUANTUM_YIELD_CLASS_REGISTRY["sandoval"](
         env=quantum_yield_env,
         reference_kphio=reference_kphio,
     )
 
-    assert np.allclose(qy2.kphio, expected_kphio)
+    assert_allclose(qy2.kphio, expected_kphio, rtol=1e-06)

@@ -2,6 +2,7 @@
 
 import numpy as np
 import pytest
+from numpy.testing import assert_allclose
 
 
 @pytest.fixture
@@ -59,7 +60,7 @@ def test_solar_scalars():
     }
 
     for ky, val in expected.items():
-        assert np.allclose(getattr(solar, ky), val)
+        assert_allclose(getattr(solar, ky), val)
 
 
 def test_solar_iter(daily_flux_benchmarks, expected_attr):
@@ -82,7 +83,7 @@ def test_solar_iter(daily_flux_benchmarks, expected_attr):
         )
 
         for ky in expected_attr:
-            assert np.allclose(getattr(solar, ky), exp[ky])
+            assert_allclose(getattr(solar, ky), exp[ky])
 
 
 def test_solar_array(daily_flux_benchmarks, expected_attr):
@@ -107,7 +108,7 @@ def test_solar_array(daily_flux_benchmarks, expected_attr):
     )
 
     for ky in expected_attr:
-        assert np.allclose(getattr(solar, ky), expected[ky])
+        assert_allclose(getattr(solar, ky), expected[ky])
 
 
 def test_solar_array_grid(grid_benchmarks):
@@ -136,7 +137,7 @@ def test_solar_array_grid(grid_benchmarks):
 
     # Test that the resulting solar calculations are the same.
     for ky in ("ppfd_d", "rn_d", "rnn_d"):
-        assert np.allclose(
+        assert_allclose(
             getattr(solar, ky),
             expected[ky].data,
             equal_nan=True,

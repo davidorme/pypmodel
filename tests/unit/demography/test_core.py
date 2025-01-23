@@ -9,6 +9,7 @@ from typing import ClassVar
 import numpy as np
 import pandas as pd
 import pytest
+from numpy.testing import assert_allclose
 from numpy.typing import NDArray
 
 
@@ -37,8 +38,8 @@ def test_PandasExporter() -> None:
     # simple checks of output class and behaviour
     assert isinstance(pandas_out, pd.DataFrame)
     assert pandas_out.shape == (5, 3)
-    assert np.allclose(pandas_out.sum(axis=1), np.arange(5) * 3)
-    assert np.allclose(pandas_out.sum(axis=0), np.repeat(10, 3))
+    assert_allclose(pandas_out.sum(axis=1), np.arange(5) * 3)
+    assert_allclose(pandas_out.sum(axis=0), np.repeat(10, 3))
 
 
 def test_Cohorts() -> None:
@@ -61,13 +62,13 @@ def test_Cohorts() -> None:
 
     # Add the t2 data into t1 and check the a and b attributes are extended
     t1.add_cohort_data(t2)
-    assert np.allclose(t1.a, np.arange(1, 7))
-    assert np.allclose(t1.b, np.arange(4, 10))
+    assert_allclose(t1.a, np.arange(1, 7))
+    assert_allclose(t1.b, np.arange(4, 10))
 
     # Drop some indices and check the a and b attributes are truncated
     t1.drop_cohort_data(np.array([0, 5]))
-    assert np.allclose(t1.a, np.arange(2, 6))
-    assert np.allclose(t1.b, np.arange(5, 9))
+    assert_allclose(t1.a, np.arange(2, 6))
+    assert_allclose(t1.b, np.arange(5, 9))
 
 
 def test_Cohorts_add_cohort_data_failure() -> None:
@@ -140,8 +141,8 @@ def test_PandasExporter_Cohorts_multiple_inheritance() -> None:
     # simple checks of output class and behaviour
     assert isinstance(t1_out, pd.DataFrame)
     assert t1_out.shape == (5, 3)
-    assert np.allclose(t1_out.sum(axis=1), np.array([6, 9, 12, 15, 18]))
-    assert np.allclose(t1_out.sum(axis=0), np.repeat(15, 3) + np.array([0, 5, 10]))
+    assert_allclose(t1_out.sum(axis=1), np.array([6, 9, 12, 15, 18]))
+    assert_allclose(t1_out.sum(axis=0), np.repeat(15, 3) + np.array([0, 5, 10]))
 
     # Add the second set and check the results via pandas
     t1.add_cohort_data(t2)
@@ -150,8 +151,8 @@ def test_PandasExporter_Cohorts_multiple_inheritance() -> None:
     # simple checks of output class and behaviour
     assert isinstance(t1_out_add, pd.DataFrame)
     assert t1_out_add.shape == (8, 3)
-    assert np.allclose(t1_out_add.sum(axis=1), np.array([6, 9, 12, 15, 18, 21, 24, 27]))
-    assert np.allclose(t1_out_add.sum(axis=0), np.repeat(36, 3) + np.array([0, 8, 16]))
+    assert_allclose(t1_out_add.sum(axis=1), np.array([6, 9, 12, 15, 18, 21, 24, 27]))
+    assert_allclose(t1_out_add.sum(axis=0), np.repeat(36, 3) + np.array([0, 8, 16]))
 
     # Drop some entries and recheck
     t1.drop_cohort_data(np.array([0, 7]))
@@ -160,8 +161,8 @@ def test_PandasExporter_Cohorts_multiple_inheritance() -> None:
     # simple checks of output class and behaviour
     assert isinstance(t1_out_drop, pd.DataFrame)
     assert t1_out_drop.shape == (6, 3)
-    assert np.allclose(t1_out_drop.sum(axis=1), np.array([9, 12, 15, 18, 21, 24]))
-    assert np.allclose(t1_out_drop.sum(axis=0), np.repeat(27, 3) + np.array([0, 6, 12]))
+    assert_allclose(t1_out_drop.sum(axis=1), np.array([9, 12, 15, 18, 21, 24]))
+    assert_allclose(t1_out_drop.sum(axis=0), np.repeat(27, 3) + np.array([0, 6, 12]))
 
 
 @pytest.mark.parametrize(
@@ -464,4 +465,4 @@ def test_enforce_2D(input_array, expected, outcome):
         result = _enforce_2D(input_array)
 
         assert result.ndim == 2
-        assert np.allclose(input_array, expected)
+        assert_allclose(input_array, expected)

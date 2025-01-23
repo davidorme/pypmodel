@@ -8,6 +8,7 @@ from contextlib import nullcontext as does_not_raise
 
 import numpy as np
 import pytest
+from numpy.testing import assert_allclose
 
 
 @pytest.fixture
@@ -527,7 +528,7 @@ class Test_SubdailyScaler_get_vals_window_and_include:
             values, allow_partial_data=allow_partial_data
         )
 
-        assert np.allclose(calculated_means, expected_means, equal_nan=True)
+        assert_allclose(calculated_means, expected_means, equal_nan=True)
 
     def test_SubdailyScaler_get_vals_include(
         self, fixture_SubdailyScaler, values, expected_means, allow_partial_data
@@ -542,7 +543,7 @@ class Test_SubdailyScaler_get_vals_window_and_include:
             values, allow_partial_data=allow_partial_data
         )
 
-        assert np.allclose(calculated_means, expected_means, equal_nan=True)
+        assert_allclose(calculated_means, expected_means, equal_nan=True)
 
 
 @pytest.mark.parametrize(
@@ -627,7 +628,7 @@ def test_SubdailyScaler_get_vals_nearest(
     fixture_SubdailyScaler.set_nearest(np.timedelta64(11 * 60 + 29, "m"))
     calculated_means = fixture_SubdailyScaler.get_daily_means(values)
 
-    assert np.allclose(calculated_means, expected_means, equal_nan=True)
+    assert_allclose(calculated_means, expected_means, equal_nan=True)
 
 
 @pytest.mark.parametrize(
@@ -806,7 +807,7 @@ def test_SubdailyScaler_fill_daily_to_subdaily_previous(
         previous_value=previous_value,
     )
 
-    assert np.allclose(res, exp_values, equal_nan=True)
+    assert_allclose(res, exp_values, equal_nan=True)
 
 
 @pytest.mark.parametrize(
@@ -882,7 +883,7 @@ def test_SubdailyScaler_fill_daily_to_subdaily_linear(
         input_values, update_point=update_point, kind="linear"
     )
 
-    assert np.allclose(res, exp_values, equal_nan=True)
+    assert_allclose(res, exp_values, equal_nan=True)
 
 
 @pytest.mark.parametrize(

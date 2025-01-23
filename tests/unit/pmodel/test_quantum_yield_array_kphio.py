@@ -10,6 +10,7 @@ from types import SimpleNamespace
 
 import numpy as np
 import pytest
+from numpy.testing import assert_allclose
 
 
 @pytest.fixture
@@ -48,10 +49,10 @@ def test_scalar_kphio(basic_inputs_and_expected):
     mod = PModel(env, method_kphio="fixed", reference_kphio=0.05)
     mod.estimate_productivity(fapar=inputs.fapar, ppfd=inputs.ppfd)
 
-    assert np.allclose(mod.gpp, expected.gpp)
-    assert np.allclose(mod.optchi.chi, expected.chi)
-    assert np.allclose(mod.jmax, expected.jmax)
-    assert np.allclose(mod.vcmax, expected.vcmax)
+    assert_allclose(mod.gpp, expected.gpp)
+    assert_allclose(mod.optchi.chi, expected.chi)
+    assert_allclose(mod.jmax, expected.jmax)
+    assert_allclose(mod.vcmax, expected.vcmax)
 
 
 @pytest.fixture
@@ -169,7 +170,7 @@ def test_kphio_arrays(basic_inputs_and_expected, variable_kphio, shape):
     mod = PModel(env, reference_kphio=kphio_vals.reshape(shape), method_kphio="fixed")
     mod.estimate_productivity(fapar=inputs.fapar, ppfd=inputs.ppfd)
 
-    assert np.allclose(mod.gpp, expected_gpp.reshape(shape))
+    assert_allclose(mod.gpp, expected_gpp.reshape(shape))
 
 
 @pytest.fixture
@@ -253,4 +254,4 @@ def test_kphio_arrays_subdaily(
         allow_holdover=True,
     )
 
-    assert np.allclose(subdaily_pmodel.gpp, expected_gpp.reshape(shape), equal_nan=True)
+    assert_allclose(subdaily_pmodel.gpp, expected_gpp.reshape(shape), equal_nan=True)

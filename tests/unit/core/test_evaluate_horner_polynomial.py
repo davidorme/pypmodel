@@ -2,6 +2,7 @@
 
 import numpy as np
 import pytest
+from numpy.testing import assert_allclose
 
 
 @pytest.mark.parametrize(
@@ -27,4 +28,4 @@ def test_evaluate_horner_polynomial(inputs):
         cf = np.random.normal(size=deg + 1)
         normal = np.polynomial.polynomial.polyval(inputs, cf)
         horner = evaluate_horner_polynomial(inputs, cf)
-        assert np.allclose(normal, horner)
+        assert_allclose(normal, horner)

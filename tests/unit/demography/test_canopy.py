@@ -2,6 +2,7 @@
 
 import numpy as np
 import pytest
+from numpy.testing import assert_allclose
 
 
 @pytest.mark.parametrize(
@@ -69,19 +70,17 @@ class TestCanopyData:
 
         # Unpack and test expectations
         exp_stem_leaf_area, exp_lai, exp_f_trans = cohort_expected
-        assert np.allclose(instance.stem_leaf_area, exp_stem_leaf_area)
-        assert np.allclose(instance.lai, exp_lai)
-        assert np.allclose(instance.f_trans, exp_f_trans)
+        assert_allclose(instance.stem_leaf_area, exp_stem_leaf_area)
+        assert_allclose(instance.lai, exp_lai)
+        assert_allclose(instance.f_trans, exp_f_trans)
 
         # Unpack and test expectations for cohort and stem fapar
         exp_f_trans, exp_trans_prof = community_expected
         expected_fapar = -np.diff(exp_trans_prof, prepend=1)
-        assert np.allclose(
+        assert_allclose(
             instance.cohort_fapar, np.tile((expected_fapar / 3)[:, None], 3)
         )
-        assert np.allclose(
-            instance.stem_fapar, np.tile((expected_fapar / 6)[:, None], 3)
-        )
+        assert_allclose(instance.stem_fapar, np.tile((expected_fapar / 6)[:, None], 3))
 
         # Test the inherited to_pandas method
         df = instance.to_pandas()
@@ -106,8 +105,8 @@ class TestCanopyData:
 
         # Unpack and test expectations
         exp_f_trans, exp_trans_prof = community_expected
-        assert np.allclose(instance.f_trans, exp_f_trans)
-        assert np.allclose(instance.transmission_profile, exp_trans_prof)
+        assert_allclose(instance.f_trans, exp_f_trans)
+        assert_allclose(instance.transmission_profile, exp_trans_prof)
 
         # Test the inherited to_pandas method
         df = instance.to_pandas()

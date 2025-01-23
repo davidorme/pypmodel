@@ -11,6 +11,7 @@
 from itertools import product
 
 import numpy as np
+from numpy.testing import assert_allclose
 
 # Testing estimate_daily_water_balance (was run_one_day)
 
@@ -45,11 +46,11 @@ def test_estimate_daily_water_balance_scalar(splash_core_constants):
     }
 
     for ky, val in evap_expected.items():
-        assert np.allclose(getattr(splash.evap, ky), val)
+        assert_allclose(getattr(splash.evap, ky), val)
 
-    assert np.allclose(aet, 5.748034)
-    assert np.allclose(sm, 75.137158)
-    assert np.allclose(ro, 0.0000000)
+    assert_allclose(aet, 5.748034)
+    assert_allclose(sm, 75.137158)
+    assert_allclose(ro, 0.0000000)
 
 
 def test_estimate_daily_water_balance_iter(
@@ -80,9 +81,9 @@ def test_estimate_daily_water_balance_iter(
         aet, sm, ro = splash.estimate_daily_water_balance(
             previous_wn=np.array([inp["wn"]]), day_idx=0
         )
-        assert np.allclose(aet, exp["aet_d"])
-        assert np.allclose(sm, exp["wn"])
-        assert np.allclose(ro, exp["ro"])
+        assert_allclose(aet, exp["aet_d"])
+        assert_allclose(sm, exp["wn"])
+        assert_allclose(ro, exp["ro"])
 
 
 def test_estimate_daily_water_balance_array(
@@ -108,9 +109,9 @@ def test_estimate_daily_water_balance_array(
         previous_wn=inputs["wn"], day_idx=None
     )
 
-    assert np.allclose(aet, expected["aet_d"])
-    assert np.allclose(sm, expected["wn"])
-    assert np.allclose(ro, expected["ro"])
+    assert_allclose(aet, expected["aet_d"])
+    assert_allclose(sm, expected["wn"])
+    assert_allclose(ro, expected["ro"])
 
 
 # Testing the spin-up process
@@ -139,7 +140,7 @@ def test_run_spin_up_oned(splash_core_constants, one_d_benchmark):
     wn = splash.estimate_initial_soil_moisture()
 
     # Check against the spun up value from the original implementation
-    assert np.allclose(wn, expected["wn_spun_up"])
+    assert_allclose(wn, expected["wn_spun_up"])
 
 
 def test_run_spin_up_iter(splash_core_constants, grid_benchmarks):
@@ -181,7 +182,7 @@ def test_run_spin_up_iter(splash_core_constants, grid_benchmarks):
         wn = splash.estimate_initial_soil_moisture()
 
         # Check against the spun up value from the original implementation
-        assert np.allclose(wn, cell_expected.wn_spun_up)
+        assert_allclose(wn, cell_expected.wn_spun_up)
 
 
 def test_run_spin_up_gridded(splash_core_constants, grid_benchmarks):
@@ -206,7 +207,7 @@ def test_run_spin_up_gridded(splash_core_constants, grid_benchmarks):
 
     # Check against the spun up value from the original implementation
     expected_wn = expected["wn_spun_up"].to_numpy()
-    assert np.allclose(wn, expected_wn, equal_nan=True)
+    assert_allclose(wn, expected_wn, equal_nan=True)
 
 
 # Testing the iterated water balance calculation
@@ -239,12 +240,12 @@ def test_calculate_soil_moisture_oned(splash_core_constants, one_d_benchmark):
     # this input is tested above.
     aet, wn, ro = splash.calculate_soil_moisture(expected["wn_spun_up"].data)
 
-    assert np.allclose(splash.evap.pet_d, expected["pet_d"].data)
+    assert_allclose(splash.evap.pet_d, expected["pet_d"].data)
 
     # Check against the spun up value from the original implementation
-    assert np.allclose(aet, expected["aet_d"].data)
-    assert np.allclose(wn, expected["wn"].data)
-    assert np.allclose(ro, expected["ro"].data)
+    assert_allclose(aet, expected["aet_d"].data)
+    assert_allclose(wn, expected["wn"].data)
+    assert_allclose(ro, expected["ro"].data)
 
 
 def test_calculate_soil_moisture_grid(splash_core_constants, grid_benchmarks):
@@ -276,7 +277,7 @@ def test_calculate_soil_moisture_grid(splash_core_constants, grid_benchmarks):
     aet, wn, ro = splash.calculate_soil_moisture(expected["wn_spun_up"].data)
 
     # Check against the spun up value from the original implementation
-    assert np.allclose(aet, expected["aet_d"].data, equal_nan=True)
-    assert np.allclose(wn, expected["wn"].data, equal_nan=True)
+    assert_allclose(aet, expected["aet_d"].data, equal_nan=True)
+    assert_allclose(wn, expected["wn"].data, equal_nan=True)
     # Not entirely clear where the slight differences come from
-    assert np.allclose(ro, expected["ro"].data, equal_nan=True, atol=1e-04)
+    assert_allclose(ro, expected["ro"].data, equal_nan=True, atol=1e-04)

@@ -5,6 +5,7 @@ from unittest.mock import patch
 
 import numpy as np
 import pytest
+from numpy.testing import assert_allclose
 
 
 @pytest.mark.parametrize(
@@ -22,7 +23,7 @@ def test_calculate_crown_r_0_values(crown_areas, expected_r0):
     q_m = np.array([2.9038988210485766, 2.3953681843215673])
     actual_r0_values = calculate_crown_r0(q_m=q_m, crown_area=crown_areas)
 
-    assert np.allclose(actual_r0_values, expected_r0)
+    assert_allclose(actual_r0_values, expected_r0)
 
 
 @pytest.mark.parametrize(
@@ -221,7 +222,7 @@ class TestTModel:
             )
 
             assert result.shape == exp_shape
-            assert np.allclose(result, rtmodel_data["stem_height"][out_idx])
+            assert_allclose(result, rtmodel_data["stem_height"][out_idx])
             return
 
         assert str(excep.value).startswith(excep_msg)
@@ -249,7 +250,7 @@ class TestTModel:
             )
 
             assert result.shape == exp_shape
-            assert np.allclose(result, rtmodel_data["dbh"][out_idx])
+            assert_allclose(result, rtmodel_data["dbh"][out_idx])
             return
 
         assert str(excep.value).startswith(excep_msg)
@@ -278,7 +279,7 @@ class TestTModel:
             )
 
             assert result.shape == exp_shape
-            assert np.allclose(result, rtmodel_data["crown_area"][out_idx])
+            assert_allclose(result, rtmodel_data["crown_area"][out_idx])
             return
 
         assert str(excep.value).startswith(excep_msg)
@@ -306,7 +307,7 @@ class TestTModel:
             )
 
             assert result.shape == exp_shape
-            assert np.allclose(result, rtmodel_data["crown_fraction"][out_idx])
+            assert_allclose(result, rtmodel_data["crown_fraction"][out_idx])
             return
 
         assert str(excep.value).startswith(excep_msg)
@@ -334,7 +335,7 @@ class TestTModel:
             )
 
             assert result.shape == exp_shape
-            assert np.allclose(result, rtmodel_data["stem_mass"][out_idx])
+            assert_allclose(result, rtmodel_data["stem_mass"][out_idx])
             return
 
         assert str(excep.value).startswith(excep_msg)
@@ -362,7 +363,7 @@ class TestTModel:
             )
 
             assert result.shape == exp_shape
-            assert np.allclose(result, rtmodel_data["foliage_mass"][out_idx])
+            assert_allclose(result, rtmodel_data["foliage_mass"][out_idx])
             return
 
         assert str(excep.value).startswith(excep_msg)
@@ -392,7 +393,7 @@ class TestTModel:
             )
 
             assert result.shape == exp_shape
-            assert np.allclose(result, rtmodel_data["sapwood_mass"][out_idx])
+            assert_allclose(result, rtmodel_data["sapwood_mass"][out_idx])
             return
 
         assert str(excep.value).startswith(excep_msg)
@@ -421,7 +422,7 @@ class TestTModel:
             )
 
             assert result.shape == exp_shape
-            assert np.allclose(result, rtmodel_data["whole_crown_gpp"][out_idx])
+            assert_allclose(result, rtmodel_data["whole_crown_gpp"][out_idx])
             return
 
         assert str(excep.value).startswith(excep_msg)
@@ -448,7 +449,7 @@ class TestTModel:
             )
 
             assert result.shape == exp_shape
-            assert np.allclose(result, rtmodel_data["sapwood_respiration"][out_idx])
+            assert_allclose(result, rtmodel_data["sapwood_respiration"][out_idx])
             return
 
         assert str(excep.value).startswith(excep_msg)
@@ -481,7 +482,7 @@ class TestTModel:
             )
 
             assert result.shape == exp_shape
-            assert np.allclose(
+            assert_allclose(
                 result,
                 rtmodel_data["whole_crown_gpp"][data_idx]
                 * rtmodel_flora.resp_f[pft_idx],
@@ -514,7 +515,7 @@ class TestTModel:
             )
 
             assert result.shape == exp_shape
-            assert np.allclose(result, rtmodel_data["fine_root_respiration"][out_idx])
+            assert_allclose(result, rtmodel_data["fine_root_respiration"][out_idx])
             return
 
         assert str(excep.value).startswith(excep_msg)
@@ -548,7 +549,7 @@ class TestTModel:
             )
 
             assert result.shape == exp_shape
-            assert np.allclose(result, rtmodel_data["npp"][out_idx])
+            assert_allclose(result, rtmodel_data["npp"][out_idx])
             return
 
         assert str(excep.value).startswith(excep_msg)
@@ -580,7 +581,7 @@ class TestTModel:
             )
 
             assert result.shape == exp_shape
-            assert np.allclose(result, rtmodel_data["turnover"][out_idx])
+            assert_allclose(result, rtmodel_data["turnover"][out_idx])
             return
 
         assert str(excep.value).startswith(excep_msg)
@@ -618,15 +619,13 @@ class TestTModel:
             )
 
             assert delta_d.shape == exp_shape
-            assert np.allclose(delta_d, rtmodel_data["delta_dbh"][out_idx])
+            assert_allclose(delta_d, rtmodel_data["delta_dbh"][out_idx])
 
             assert delta_mass_stm.shape == exp_shape
-            assert np.allclose(delta_mass_stm, rtmodel_data["delta_stem_mass"][out_idx])
+            assert_allclose(delta_mass_stm, rtmodel_data["delta_stem_mass"][out_idx])
 
             assert delta_mass_frt.shape == exp_shape
-            assert np.allclose(
-                delta_mass_frt, rtmodel_data["delta_foliage_mass"][out_idx]
-            )
+            assert_allclose(delta_mass_frt, rtmodel_data["delta_foliage_mass"][out_idx])
             return
 
         assert str(excep.value).startswith(excep_msg)
@@ -724,7 +723,7 @@ def test_StemAllometry(rtmodel_flora, rtmodel_data):
         v for v in stem_allometry.array_attrs if v not in ["crown_r0", "crown_z_max"]
     )
     for var in vars_to_check:
-        assert np.allclose(getattr(stem_allometry, var), rtmodel_data[var])
+        assert_allclose(getattr(stem_allometry, var), rtmodel_data[var])
 
     # Test the inherited to_pandas method
     df = stem_allometry.to_pandas()
@@ -766,7 +765,7 @@ def test_StemAllometry_CohortMethods(rtmodel_flora, rtmodel_data):
     # Remove the rows from the first copy and what's left should be aligned with the
     # original data
     stem_allometry.drop_cohort_data(drop_indices=np.arange(rtmodel_flora.n_pfts))
-    assert np.allclose(stem_allometry.crown_fraction, check_data)
+    assert_allclose(stem_allometry.crown_fraction, check_data)
 
 
 def test_StemAllocation(rtmodel_flora, rtmodel_data):
@@ -790,7 +789,7 @@ def test_StemAllocation(rtmodel_flora, rtmodel_data):
         v for v in stem_allocation.array_attrs if v not in ["foliar_respiration"]
     )
     for var in vars_to_check:
-        assert np.allclose(getattr(stem_allocation, var), rtmodel_data[var])
+        assert_allclose(getattr(stem_allocation, var), rtmodel_data[var])
 
     # Test the inherited to_pandas method
     df = stem_allocation.to_pandas()

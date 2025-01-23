@@ -8,9 +8,9 @@ predictions from rpmodel. The test code is now also outdated.
 
 import os
 
-import numpy as np
 import pytest
 import xarray
+from numpy.testing import assert_allclose
 
 
 @pytest.fixture(scope="module")
@@ -112,7 +112,7 @@ def test_pmodel_global_array(dataset, ctrl):
     # ds.close()
 
     assert scaled.gpp.shape == gpp_r.shape
-    assert np.allclose(scaled.gpp, gpp_r, equal_nan=True)
+    assert_allclose(scaled.gpp, gpp_r, equal_nan=True)
 
     # ## Run the P model in a location where the trimming in do_ftemp_kphio matters
     # patm = pmodel.calc_patm(1211)

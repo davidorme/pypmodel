@@ -5,6 +5,7 @@ from importlib import resources
 import numpy as np
 import pandas as pd
 import pytest
+from numpy.testing import assert_allclose
 
 
 @pytest.fixture(scope="module")
@@ -46,4 +47,4 @@ def test_QuantumYieldSandoval(values):
     expected = values["phio"].to_numpy()
     expected = np.where(expected < 0, np.nan, expected)
 
-    assert np.allclose(expected, qy.kphio, equal_nan=True)
+    assert_allclose(expected, qy.kphio, equal_nan=True, atol=1e-8)

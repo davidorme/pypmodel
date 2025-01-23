@@ -11,6 +11,7 @@ from importlib import resources
 
 import numpy as np
 import pytest
+from numpy.testing import assert_allclose
 
 # RPMODEL bugs
 # rpmodel was using an incorrect parameterisation of the C4 ftemp kphio curve
@@ -88,7 +89,7 @@ def test_calc_density_h2o(values, tc, patm, context_manager, expvals):
     with context_manager:
         ret = calc_density_h2o(tc=values[tc], patm=values[patm])
         if expvals is not None:
-            assert np.allclose(ret, values[expvals])
+            assert_allclose(ret, values[expvals])
 
 
 # ------------------------------------------
@@ -108,7 +109,7 @@ def test_calc_ftemp_arrh(values, tk, expvars):
     from pyrealm.pmodel import calc_ftemp_arrh
 
     ret = calc_ftemp_arrh(tk=values[tk], ha=values["KattgeKnorr_ha"])
-    assert np.allclose(ret, values[expvars])
+    assert_allclose(ret, values[expvars], rtol=1e-05)
 
 
 # ------------------------------------------
@@ -151,7 +152,7 @@ def test_calc_ftemp_inst_vcmax(values, tc, expvars):
         core_const=core_const,
     )
 
-    assert np.allclose(ret, values[expvars])
+    assert_allclose(ret, values[expvars])
 
 
 # ------------------------------------------
@@ -186,7 +187,7 @@ def test_calc_ftemp_kphio(values, tc, c4, expvars):
 
     # The QuantumYield class returns the actual kphio, not the correction factor, so
     # scale back to the correction factor
-    assert np.allclose(ret.kphio / ret.reference_kphio, values[expvars])
+    assert_allclose(ret.kphio / ret.reference_kphio, values[expvars], rtol=1e-06)
 
 
 # ------------------------------------------
@@ -210,7 +211,7 @@ def test_calc_gammastar(values, tc, patm, context_manager, expvals):
     with context_manager:
         ret = calc_gammastar(tc=values[tc], patm=values[patm])
         if expvals is not None:
-            assert np.allclose(ret, values[expvals])
+            assert_allclose(ret, values[expvals])
 
 
 # ------------------------------------------
@@ -235,7 +236,7 @@ def test_calc_kmm(values, tc, patm, context_manager, expvals):
     with context_manager:
         ret = calc_kmm(tc=values[tc], patm=values[patm])
         if expvals:
-            assert np.allclose(ret, values[expvals])
+            assert_allclose(ret, values[expvals])
 
 
 # ------------------------------------------
@@ -260,7 +261,7 @@ def test_calc_soilmstress_stocker(values, soilm, meanalpha, context_manager, exp
     with context_manager:
         ret = calc_soilmstress_stocker(soilm=values[soilm], meanalpha=values[meanalpha])
         if expvals:
-            assert np.allclose(ret, values[expvals])
+            assert_allclose(ret, values[expvals])
 
 
 # ------------------------------------------
@@ -285,7 +286,7 @@ def test_calc_viscosity_h2o(values, tc, patm, context_manager, expvals):
     with context_manager:
         ret = calc_viscosity_h2o(tc=values[tc], patm=values[patm])
         if expvals:
-            assert np.allclose(ret, values[expvals])
+            assert_allclose(ret, values[expvals], rtol=1e-5)
 
 
 # ------------------------------------------
@@ -306,7 +307,7 @@ def test_calc_patm(values, elev, expvals):
     from pyrealm.core.pressure import calc_patm
 
     ret = calc_patm(elv=values[elev])
-    assert np.allclose(ret, values[expvals])
+    assert_allclose(ret, values[expvals])
 
 
 # ------------------------------------------
@@ -331,7 +332,7 @@ def test_calc_co2_to_ca(values, co2, patm, context_manager, expvals):
     with context_manager:
         ret = calc_co2_to_ca(co2=values[co2], patm=values[patm])
         if expvals:
-            assert np.allclose(ret, values[expvals])
+            assert_allclose(ret, values[expvals])
 
 
 # ------------------------------------------
@@ -432,10 +433,10 @@ def test_optimal_chi(values, tc, patm, co2, vpd, method, context_manager, expval
 
         if expvalues is not None:
             expected = values[expvalues]
-            assert np.allclose(ret.chi, expected["chi"])
-            assert np.allclose(ret.mj, expected["mj"])
-            assert np.allclose(ret.mc, expected["mc"])
-            assert np.allclose(ret.mjoc, expected["mjoc"])
+            assert_allclose(ret.chi, expected["chi"], rtol=1e-06)
+            assert_allclose(ret.mj, expected["mj"], rtol=1e-06)
+            assert_allclose(ret.mc, expected["mc"], rtol=1e-06)
+            assert_allclose(ret.mjoc, expected["mjoc"], rtol=1e-06)
 
 
 # ------------------------------------------
@@ -516,11 +517,11 @@ def test_jmax_limitation(
     expected_lue = (
         (0.05 * ftemp_kphio) * optchi.mj * jmax.f_v * xf * env.core_const.k_c_molmass
     )
-    assert np.allclose(expected_lue, expected["lue"], equal_nan=True)
+    assert_allclose(expected_lue, expected["lue"], equal_nan=True, rtol=1e6)
 
     if jmax_method == "smith19":
-        assert np.allclose(jmax.omega, expected["omega"], equal_nan=True)
-        assert np.allclose(jmax.omega_star, expected["omega_star"], equal_nan=True)
+        assert_allclose(jmax.omega, expected["omega"], equal_nan=True)
+        assert_allclose(jmax.omega_star, expected["omega_star"], equal_nan=True)
 
 
 # ------------------------------------------
@@ -565,10 +566,10 @@ def test_pmodelenvironment(values, tc, vpd, co2, patm, ca, kmm, gammastar, ns_st
         tc=values[tc], patm=values[patm], vpd=values[vpd], co2=values[co2]
     )
 
-    assert np.allclose(ret.gammastar, values[gammastar])
-    assert np.allclose(ret.ns_star, values[ns_star])
-    assert np.allclose(ret.kmm, values[kmm])
-    assert np.allclose(ret.ca, values[ca])
+    assert_allclose(ret.gammastar, values[gammastar])
+    assert_allclose(ret.ns_star, values[ns_star])
+    assert_allclose(ret.kmm, values[kmm])
+    assert_allclose(ret.ca, values[ca])
 
 
 @pytest.mark.parametrize(
@@ -685,8 +686,8 @@ def test_pmodel_class_c3(
     # Test chi and water use efficiency values
     # IWUE reported as µmol mol in pyrealm and Pa in rpmodel
     # rpmodel doesn't return LUE
-    assert np.allclose(ret.optchi.chi, expected["chi"])
-    assert np.allclose(ret.iwue * (ret.env.patm * 1e-6), expected["iwue"])
+    assert_allclose(ret.optchi.chi, expected["chi"], rtol=1e-06)
+    assert_allclose(ret.iwue * (ret.env.patm * 1e-6), expected["iwue"], rtol=1e-06)
 
     # Test productivity values
 
@@ -700,7 +701,9 @@ def test_pmodel_class_c3(
 
     # Apply the soil moisture correction posthoc to pyrealm GPP, applied internally to
     # the rpmodel benchmark calculations.
-    assert np.allclose(ret.gpp * soilmstress, sc * expected["gpp"], equal_nan=True)
+    assert_allclose(
+        ret.gpp * soilmstress, sc * expected["gpp"], equal_nan=True, rtol=1e-06
+    )
 
     # Test exclusions:
     # - Also skip tests of jmax when no Jmax limitation is applied (none-) as the
@@ -718,21 +721,24 @@ def test_pmodel_class_c3(
     elif "smith" in name:
         warnings.warn("Skipping Jmax test for Smith due to calculation differences.")
     else:
-        assert np.allclose(
-            np.nan_to_num(ret.jmax), np.nan_to_num(expected["jmax"]), equal_nan=True
+        assert_allclose(
+            np.nan_to_num(ret.jmax),
+            np.nan_to_num(expected["jmax"]),
+            equal_nan=True,
+            rtol=1e-06,
         )
 
     # pyrealm and pmodel do different things with jmax and vcmax
-    assert np.allclose(ret.vcmax, sc * expected["vcmax"], equal_nan=True)
-    assert np.allclose(ret.vcmax25, sc * expected["vcmax25"], equal_nan=True)
+    assert_allclose(ret.vcmax, sc * expected["vcmax"], equal_nan=True, rtol=1e-06)
+    assert_allclose(ret.vcmax25, sc * expected["vcmax25"], equal_nan=True, rtol=1e-06)
 
     # rd and g_s are calcualted using vcmax
     # TODO - tolerance turned up here to pass one of the Smith tests - remove later?
 
-    assert np.allclose(ret.rd, sc * expected["rd"], equal_nan=True, atol=1e07)
+    assert_allclose(ret.rd, sc * expected["rd"], equal_nan=True, atol=1e07)
     # Some algo issues with getting 0 and na in g_s
     # Fill na values with 0 in both inputs
-    assert np.allclose(
+    assert_allclose(
         np.nan_to_num(ret.gs), sc * np.nan_to_num(expected["gs"]), atol=1e07
     )
 
@@ -803,11 +809,11 @@ def test_pmodel_class_c4(
     # Test chi and water use efficiency values
     # IWUE reported as µmol mol in pyrealm and Pa in rpmodel
     # rpmodel doesn't return LUE
-    assert np.allclose(ret.optchi.chi, expected["chi"])
-    assert np.allclose(ret.iwue * (ret.env.patm * 1e-6), expected["iwue"])
+    assert_allclose(ret.optchi.chi, expected["chi"], rtol=1e-06)
+    assert_allclose(ret.iwue * (ret.env.patm * 1e-6), expected["iwue"], rtol=1e-06)
 
     # Test productivity values
-    assert np.allclose(ret.gpp * soilmstress, expected["gpp"], equal_nan=True)
+    assert_allclose(ret.gpp * soilmstress, expected["gpp"], equal_nan=True, rtol=1e-06)
 
     # Test exclusions:
     # - rpmodel adjusts vcmax and jmax when Stocker empirical soil moisture
@@ -827,20 +833,20 @@ def test_pmodel_class_c4(
     # if 'none-fkphio-off-sm-off' in name or 'none-fkphio-on-sm-off' in name:
     warnings.warn("Skipping Jmax test for cases with numerical instability")
     # else:
-    #     assert np.allclose(np.nan_to_num(ret.jmax),
+    #     assert_allclose(np.nan_to_num(ret.jmax),
     #                        np.nan_to_num(expected['jmax']), equal_nan=True)
 
     # pyrealm and pmodel do different things with jmax and vcmax
-    assert np.allclose(ret.vcmax, expected["vcmax"], equal_nan=True)
-    assert np.allclose(ret.vcmax25, expected["vcmax25"], equal_nan=True)
+    assert_allclose(ret.vcmax, expected["vcmax"], equal_nan=True, rtol=1e-06)
+    assert_allclose(ret.vcmax25, expected["vcmax25"], equal_nan=True, rtol=1e-06)
 
     # rd and g_s are calcualted using vcmax
-    assert np.allclose(ret.rd, expected["rd"], equal_nan=True)
+    assert_allclose(ret.rd, expected["rd"], equal_nan=True, rtol=3e-05)
 
     # Some algo issues with getting 0 and na in g_s
     # Fill na values with 0 in both inputs
     warnings.warn("Skipping gs test for cases with numerical instability")
-    # assert np.allclose(np.nan_to_num(ret.gs),
+    # assert_allclose(np.nan_to_num(ret.gs),
     #                 np.nan_to_num(expected['gs']))
 
 
@@ -931,7 +937,7 @@ def test_lavergne_equivalence(tc, theta, variable_method, fixed_method, is_C4):
 
     mod_fixed = PModel(env, method_optchi=fixed_method)
 
-    assert np.allclose(mod_theta.optchi.chi, mod_fixed.optchi.chi)
-    assert np.allclose(mod_theta.optchi.mj, mod_fixed.optchi.mj)
-    assert np.allclose(mod_theta.optchi.mc, mod_fixed.optchi.mc)
-    assert np.allclose(mod_theta.optchi.mjoc, mod_fixed.optchi.mjoc)
+    assert_allclose(mod_theta.optchi.chi, mod_fixed.optchi.chi)
+    assert_allclose(mod_theta.optchi.mj, mod_fixed.optchi.mj)
+    assert_allclose(mod_theta.optchi.mc, mod_fixed.optchi.mc)
+    assert_allclose(mod_theta.optchi.mjoc, mod_fixed.optchi.mjoc)

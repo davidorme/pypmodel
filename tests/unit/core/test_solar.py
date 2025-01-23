@@ -2,6 +2,7 @@
 
 import numpy as np
 import pytest
+from numpy.testing import assert_allclose
 
 from pyrealm.constants import CoreConst
 
@@ -28,7 +29,7 @@ def test_calc_distance_factor(nu, expected):
     Const = CoreConst()
     result = calc_distance_factor(nu, Const.k_e)
 
-    assert np.allclose(result, expected)
+    assert_allclose(result, expected)
 
 
 @pytest.mark.parametrize(
@@ -51,7 +52,7 @@ def test_calc_declination_angle_delta(lambda_, expected):
     Const = CoreConst()
     result = calc_declination_angle_delta(lambda_, Const.k_eps, Const.k_pir)
 
-    assert np.allclose(result, expected)
+    assert_allclose(result, expected)
 
 
 @pytest.mark.parametrize(
@@ -74,7 +75,7 @@ def test_calc_lat_delta_intermediates(delta, latitude, expected):
 
     result = calc_lat_delta_intermediates(delta, latitude)
 
-    assert np.allclose(result, expected)
+    assert_allclose(result, expected)
 
 
 @pytest.mark.parametrize(
@@ -98,7 +99,7 @@ def test_calc_sunset_hour_angle(delta, latitude, expected):
     Const = CoreConst()
     result = calc_sunset_hour_angle(delta, latitude, Const.k_pir)
 
-    assert np.allclose(result, expected)
+    assert_allclose(result, expected)
 
 
 @pytest.mark.parametrize(
@@ -125,7 +126,7 @@ def test_calc_daily_solar_radiation(dr, hs, delta, latitude, expected):
 
     result = calc_daily_solar_radiation(dr, hs, delta, latitude, Const)
 
-    assert np.allclose(result, expected)
+    assert_allclose(result, expected)
 
 
 @pytest.mark.parametrize(
@@ -144,7 +145,7 @@ def test_calc_transmissivity(sf, elv, expected):
 
     result = calc_transmissivity(sf, elv, Const.k_c, Const.k_d)
 
-    assert np.allclose(result, expected)
+    assert_allclose(result, expected)
 
 
 @pytest.mark.parametrize(
@@ -163,7 +164,7 @@ def test_calc_ppfd_from_tau_ra_d(tau, ra_d, expected):
 
     result = calc_ppfd_from_tau_ra_d(tau, ra_d, Const.k_fFEC, Const.k_alb_vis)
 
-    assert np.allclose(result, expected)
+    assert_allclose(result, expected)
 
 
 @pytest.mark.parametrize(
@@ -198,7 +199,7 @@ def test_calc_ppfd(
 
     result = calc_ppfd(sf, elv, latitude, julian_day, n_days, Const)
 
-    assert np.allclose(result, expected)
+    assert_allclose(result, expected)
 
 
 @pytest.mark.parametrize(
@@ -216,7 +217,7 @@ def test_calc_net_longwave_radiation(sf, tc, expected):
 
     result = calc_net_longwave_radiation(sf, tc, Const.k_b, Const.k_A)
 
-    assert np.allclose(result, expected)
+    assert_allclose(result, expected)
 
 
 @pytest.mark.parametrize(
@@ -240,7 +241,7 @@ def test_calc_rw(tau, dr, expected):
 
     result = calc_rw(tau, dr, Const.k_alb_sw, Const.k_Gsc)
 
-    assert np.allclose(result, expected)
+    assert_allclose(result, expected)
 
 
 @pytest.mark.parametrize(
@@ -268,7 +269,7 @@ def test_calc_net_rad_crossover_hour_angle(rnl, tau, dr, delta, latitude, expect
 
     result = calc_net_rad_crossover_hour_angle(rnl, tau, dr, delta, latitude, Const)
 
-    assert np.allclose(result, expected)
+    assert_allclose(result, expected)
 
 
 @pytest.mark.parametrize(
@@ -294,7 +295,7 @@ def test_daytime_net_radiation(hn, rnl, delta, latitude, tau, dr, expected):
 
     result = calc_daytime_net_radiation(hn, rnl, delta, latitude, tau, dr, Const)
 
-    assert np.allclose(result, expected)
+    assert_allclose(result, expected)
 
 
 @pytest.mark.parametrize(
@@ -321,7 +322,7 @@ def test_nightime_net_radiation(rnl, hn, hs, delta, latitude, tau, dr, expected)
 
     result = calc_nighttime_net_radiation(rnl, hn, hs, delta, latitude, tau, dr, Const)
 
-    assert np.allclose(result, expected)
+    assert_allclose(result, expected)
 
 
 @pytest.mark.parametrize(
@@ -343,7 +344,7 @@ def test_calc_heliocentric_longitudes(day, n_day, expected):
     from pyrealm.core.solar import calc_heliocentric_longitudes
 
     result = calc_heliocentric_longitudes(day, n_day)
-    assert np.allclose(result, expected)
+    assert_allclose(result, expected)
 
 
 @pytest.mark.parametrize(
@@ -374,7 +375,7 @@ def test_calc_solar_elevation(latitude, longitude, year_date_time, expected):
 
     result = calc_solar_elevation(site_obs_data)
 
-    assert np.allclose(result, expected)
+    assert_allclose(result, expected)
 
 
 @pytest.mark.parametrize(
@@ -395,7 +396,7 @@ def test_calc_declination(td, expected):
 
     result = solar_declination(td)
 
-    assert np.allclose(result, expected)
+    assert_allclose(result, expected)
 
 
 @pytest.mark.parametrize(
@@ -412,7 +413,7 @@ def test_calc_day_angle(julian_day, expected):
 
     result = day_angle(julian_day)
 
-    assert np.allclose(result, expected)
+    assert_allclose(result, expected)
 
 
 @pytest.mark.parametrize(
@@ -429,7 +430,7 @@ def test_equation_of_time(day_angle, expected):
 
     result = equation_of_time(day_angle)
 
-    assert np.allclose(result, expected)
+    assert_allclose(result, expected)
 
 
 @pytest.mark.parametrize(
@@ -446,7 +447,7 @@ def test_solar_noon(longitude, standard_meridian, E_t, expected):
 
     result = solar_noon(longitude, standard_meridian, E_t)
 
-    assert np.allclose(result, expected)
+    assert_allclose(result, expected)
 
 
 @pytest.mark.parametrize(
@@ -463,7 +464,7 @@ def test_local_hour_angle(t, t0, expected):
 
     result = local_hour_angle(t, t0)
 
-    assert np.allclose(result, expected)
+    assert_allclose(result, expected)
 
 
 @pytest.mark.parametrize(
@@ -482,4 +483,4 @@ def test_elevation_from_lat_dec_hn(latitude, declination, hour_angle, expected):
 
     result = elevation_from_lat_dec_hn(latitude, declination, hour_angle)
 
-    assert np.allclose(result, expected)
+    assert_allclose(result, expected)

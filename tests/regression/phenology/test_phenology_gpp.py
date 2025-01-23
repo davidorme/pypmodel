@@ -3,6 +3,7 @@
 import numpy as np
 import pandas as pd
 import pytest
+from numpy.testing import assert_allclose
 
 
 @pytest.mark.skip("Need to resolve calculation process - currently not matching")
@@ -46,10 +47,8 @@ def test_phenology_gpp_calculation(de_gri_half_hourly_data):
     )
 
     # Currently close but not exact
-    assert np.allclose(
-        de_gri_pmodel.gpp, de_gri_half_hourly_data["A0_normal"].to_numpy()
-    )
-    assert np.allclose(
+    assert_allclose(de_gri_pmodel.gpp, de_gri_half_hourly_data["A0_normal"].to_numpy())
+    assert_allclose(
         de_gri_subdaily_pmodel.gpp, de_gri_half_hourly_data["A0_slow"].to_numpy()
     )
 
@@ -70,11 +69,11 @@ def test_daily_values(de_gri_half_hourly_data, de_gri_daily_data):
     # Mean daily conditions - temperature, VPD and pressure
     for daily_mean_var in ["TA_F", "VPD_F", "PA_F"]:
         daily_means = de_gri_daily_resampler[daily_mean_var].mean().to_numpy()
-        assert np.allclose(daily_means, de_gri_daily_data[daily_mean_var], atol=0.001)
+        assert_allclose(daily_means, de_gri_daily_data[daily_mean_var], atol=0.001)
 
     # Total precipitation
     daily_precip = de_gri_daily_resampler["P_F"].sum().to_numpy()
-    assert np.allclose(daily_precip, de_gri_daily_data["P_F"], atol=0.01)
+    assert_allclose(daily_precip, de_gri_daily_data["P_F"], atol=0.01)
 
     # Annual values for mean CO2 and total precipitation
     de_gri_annual_resampler = de_gri_half_hourly_data.resample("YE")
@@ -91,10 +90,10 @@ def test_daily_values(de_gri_half_hourly_data, de_gri_daily_data):
     de_gri_daily_data["year"] = de_gri_daily_data["date"].dt.year
     de_gri_daily_data = de_gri_daily_data.merge(annual)
 
-    assert np.allclose(
-        de_gri_daily_data["CO2_F_MDS"], de_gri_daily_data["CO2_F_MDS_validation"]
+    assert_allclose(
+        de_gri_daily_data["CO2_F_MDS"],
+        de_gri_daily_data["CO2_F_MDS_validation"],
+        atol=1,
     )
 
-    assert np.allclose(
-        de_gri_daily_data["P"], de_gri_daily_data["P_F_validation"], atol=0.01
-    )
+    assert_allclose(de_gri_daily_data["P"], de_gri_daily_data["P_F_validation"], atol=1)

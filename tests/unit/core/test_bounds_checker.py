@@ -4,6 +4,7 @@ from contextlib import nullcontext as does_not_raise
 
 import numpy as np
 import pytest
+from numpy.testing import assert_allclose
 
 
 @pytest.mark.parametrize(
@@ -117,4 +118,4 @@ def test_bounds_mask(input, interval_args, context, exp):
     with context:
         out = bounds_mask(input, *interval_args)
 
-        assert np.allclose(out, exp, equal_nan=True)
+        assert_allclose(out, exp, equal_nan=True)

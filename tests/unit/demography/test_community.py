@@ -5,6 +5,7 @@ from contextlib import nullcontext as does_not_raise
 import numpy as np
 import pytest
 from marshmallow.exceptions import ValidationError
+from numpy.testing import assert_allclose
 
 
 @pytest.fixture
@@ -33,15 +34,15 @@ def fixture_expected(fixture_flora):
 def check_expected(community, expected):
     """Helper function to provide simple check of returned community objects."""
 
-    assert np.allclose(
+    assert_allclose(
         community.cohorts.n_individuals,
         expected["n_individuals"],
     )
-    assert np.allclose(
+    assert_allclose(
         community.stem_traits.a_hd,
         expected["a_hd"],
     )
-    assert np.allclose(
+    assert_allclose(
         community.stem_allometry.stem_height,
         expected["height"],
     )
@@ -132,9 +133,9 @@ def test_Cohorts_CohortMethods():
 
     # Check success of adding and dropping data
     cohorts.add_cohort_data(new_data=cohorts)
-    assert np.allclose(cohorts.dbh_values, np.array([0.2, 0.5, 0.2, 0.5]))
+    assert_allclose(cohorts.dbh_values, np.array([0.2, 0.5, 0.2, 0.5]))
     cohorts.drop_cohort_data(drop_indices=np.array([0, 2]))
-    assert np.allclose(cohorts.dbh_values, np.array([0.5, 0.5]))
+    assert_allclose(cohorts.dbh_values, np.array([0.5, 0.5]))
 
 
 @pytest.mark.parametrize(
@@ -271,9 +272,9 @@ def test_Community_add_and_drop(fixture_flora):
     community = Community(cell_id=1, cell_area=32, flora=fixture_flora, cohorts=cohorts)
 
     # Check the initial state of the three attributes that should be modified
-    assert np.allclose(community.cohorts.n_individuals, np.array([6, 1]))
-    assert np.allclose(community.stem_traits.h_max, fixture_flora.h_max)
-    assert np.allclose(community.stem_allometry.dbh, np.array([0.2, 0.5]))
+    assert_allclose(community.cohorts.n_individuals, np.array([6, 1]))
+    assert_allclose(community.stem_traits.h_max, fixture_flora.h_max)
+    assert_allclose(community.stem_allometry.dbh, np.array([0.2, 0.5]))
 
     # Add a new set of cohorts
     new_cohorts = Cohorts(
@@ -284,19 +285,17 @@ def test_Community_add_and_drop(fixture_flora):
     community.add_cohorts(new_cohorts)
 
     # Test the three attributes again to check they've all been doubled.
-    assert np.allclose(community.cohorts.n_individuals, np.array([6, 1, 8, 2]))
-    assert np.allclose(community.stem_traits.h_max, np.tile(fixture_flora.h_max, 2))
-    assert np.allclose(community.stem_allometry.dbh, np.array([0.2, 0.5, 0.3, 0.6]))
+    assert_allclose(community.cohorts.n_individuals, np.array([6, 1, 8, 2]))
+    assert_allclose(community.stem_traits.h_max, np.tile(fixture_flora.h_max, 2))
+    assert_allclose(community.stem_allometry.dbh, np.array([0.2, 0.5, 0.3, 0.6]))
 
     # Drop some rows
     community.drop_cohorts(drop_indices=np.array([1, 3]))
 
     # Test the three attributes again to check they've all been reduced.
-    assert np.allclose(community.cohorts.n_individuals, np.array([6, 8]))
-    assert np.allclose(
-        community.stem_traits.h_max, np.repeat(fixture_flora.h_max[0], 2)
-    )
-    assert np.allclose(community.stem_allometry.dbh, np.array([0.2, 0.3]))
+    assert_allclose(community.cohorts.n_individuals, np.array([6, 8]))
+    assert_allclose(community.stem_traits.h_max, np.repeat(fixture_flora.h_max[0], 2))
+    assert_allclose(community.stem_allometry.dbh, np.array([0.2, 0.3]))
 
 
 @pytest.mark.parametrize(

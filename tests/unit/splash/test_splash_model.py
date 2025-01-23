@@ -12,6 +12,7 @@ from contextlib import nullcontext
 
 import numpy as np
 import pytest
+from numpy.testing import assert_allclose
 
 
 @pytest.fixture(params=[(0, 365), (0, 366), (123, 567)])  # parametrized fixture
@@ -119,7 +120,7 @@ def test_estimate_daily_water_balance(splash_model, overflow, underflow):
 
     with context:
         aet, wn, ro = splash_model.estimate_daily_water_balance(wn_init)
-        assert np.allclose(
+        assert_allclose(
             aet + wn + ro,
             wn_init + splash_model.pn + splash_model.evap.cond,
             equal_nan=True,
@@ -150,7 +151,7 @@ def test_calc_soil_moisture(splash_model):
     aet, wn, ro = splash_model.calculate_soil_moisture(wn_init)
     wn_prev = np.insert(wn, 0, wn_init, axis=0)[:-1]
 
-    assert np.allclose(
+    assert_allclose(
         aet + wn + ro,
         wn_prev + splash_model.pn + splash_model.evap.cond,
         equal_nan=True,

@@ -6,6 +6,7 @@ SPLASH calculations.
 
 import numpy as np
 import pytest
+from numpy.testing import assert_allclose
 
 
 @pytest.fixture
@@ -58,11 +59,11 @@ def test_evap_scalar(splash_core_constants):
     }
 
     for ky, val in expected.items():
-        assert np.allclose(getattr(evap, ky), val)
+        assert_allclose(getattr(evap, ky), val)
 
-    assert np.allclose(aet, 7.972787573253663)
-    assert np.allclose(hi, 20.95931970358043)
-    assert np.allclose(sw, 0.9)
+    assert_allclose(aet, 7.972787573253663)
+    assert_allclose(hi, 20.95931970358043)
+    assert_allclose(sw, 0.9)
 
 
 def test_evap_iter(splash_core_constants, daily_flux_benchmarks, expected_attr):
@@ -93,11 +94,11 @@ def test_evap_iter(splash_core_constants, daily_flux_benchmarks, expected_attr):
         aet, hi, sw = evap.estimate_aet(wn=inp["wn"], only_aet=False)
 
         for ky in expected_attr:
-            assert np.allclose(getattr(evap, ky), exp[ky])
+            assert_allclose(getattr(evap, ky), exp[ky])
 
         # Check the values returned by estimate_aet
-        assert np.allclose(aet, exp["aet_d"])
-        assert np.allclose(hi, exp["hi"])
+        assert_allclose(aet, exp["aet_d"])
+        assert_allclose(hi, exp["hi"])
 
 
 def test_evap_array(splash_core_constants, daily_flux_benchmarks, expected_attr):
@@ -128,11 +129,11 @@ def test_evap_array(splash_core_constants, daily_flux_benchmarks, expected_attr)
     aet, hi, sw = evap.estimate_aet(wn=inputs["wn"], only_aet=False)
 
     for ky in expected_attr:
-        assert np.allclose(getattr(evap, ky), expected[ky])
+        assert_allclose(getattr(evap, ky), expected[ky])
 
     # Check the values returned by estimate_aet
-    assert np.allclose(aet, expected["aet_d"])
-    assert np.allclose(hi, expected["hi"])
+    assert_allclose(aet, expected["aet_d"])
+    assert_allclose(hi, expected["hi"])
 
 
 def test_evap_array_grid(splash_core_constants, grid_benchmarks, expected_attr):
@@ -172,7 +173,7 @@ def test_evap_array_grid(splash_core_constants, grid_benchmarks, expected_attr):
     # Test the static components of evap calculations are the same - which can be
     # tested across the whole array
     for ky in expected_attr:
-        assert np.allclose(
+        assert_allclose(
             getattr(evap, ky),
             expected[ky].data,
             equal_nan=True,
@@ -187,4 +188,4 @@ def test_evap_array_grid(splash_core_constants, grid_benchmarks, expected_attr):
     wn_sequence = np.vstack([wn_spun_up, expected["wn"].data[:-1, :, :]])
 
     aet = evap.estimate_aet(wn=wn_sequence, day_idx=None)
-    assert np.allclose(aet, expected["aet_d"], equal_nan=True)
+    assert_allclose(aet, expected["aet_d"], equal_nan=True)

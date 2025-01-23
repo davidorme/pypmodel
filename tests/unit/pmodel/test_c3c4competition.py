@@ -10,6 +10,7 @@ Runs a simple scalar test for each of the different optchi methods.
 
 import numpy as np
 import pytest
+from numpy.testing import assert_allclose
 
 
 @pytest.mark.parametrize(
@@ -111,4 +112,4 @@ def test_c3c4competition(pmodel_c3_args, pmodel_c4_args, expected):
     )
 
     for ky in expected:
-        assert np.allclose(getattr(comp, ky), expected[ky], atol=0.001)
+        assert_allclose(getattr(comp, ky), expected[ky], atol=0.001)

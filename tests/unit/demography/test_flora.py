@@ -10,6 +10,7 @@ import numpy as np
 import pandas as pd
 import pytest
 from marshmallow.exceptions import ValidationError
+from numpy.testing import assert_allclose
 from pandas.errors import ParserError
 
 if sys.version_info[:2] >= (3, 11):
@@ -447,4 +448,4 @@ def test_StemTraits_CohortMethods(fixture_flora):
     # Remove all but the first two rows and what's left should be aligned with the
     # original data
     stem_traits.drop_cohort_data(drop_indices=np.arange(2, 8))
-    assert np.allclose(stem_traits.h_max, flora_df["h_max"])
+    assert_allclose(stem_traits.h_max, flora_df["h_max"])
