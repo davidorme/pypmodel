@@ -21,7 +21,7 @@ def compute_annual_mean_vpd(param):
     pass
 
 
-def compute_annual_total_precip(param):
+def compute_annual_total_precip(precip, datetimes):
     pass
 
 
@@ -44,7 +44,7 @@ class FaparLimitation:
     def __init__(
             self,
             annual_total_potential_gpp:NDArray[float],
-           annual_mean_ca:NDArray[float],
+            annual_mean_ca:NDArray[float],
             annual_mean_chi:NDArray[float],
             annual_mean_vpd:NDArray[float],
             annual_total_precip:NDArray[float],
@@ -88,13 +88,18 @@ class FaparLimitation:
                           / (1.6 * annual_mean_vpd
                              * annual_total_potential_gpp))
 
-        if fapar_waterlim < fapar_energylim:
-            self.faparmax = fapar_waterlim
-            self.energylim = False
-        else:
-            self.faparmax = fapar_energylim
-            self.energylim = True
+        self.faparmax = -9999*np.ones(np.shape(fapar_waterlim))
+        self.energylim = -9999*np.ones(np.shape(fapar_waterlim))
 
+        for i in range(len(fapar_waterlim)):
+            if fapar_waterlim[i] < fapar_energylim[i]:
+                self.faparmax[i] = fapar_waterlim[i]
+                self.energylim[i] = False
+            else:
+                self.faparmax[i] = fapar_energylim[i]
+                self.energylim[i] = True
+
+        self.laimax = -(1 / k) * np.log(1.0 - self.faparmax)
 
     @classmethod
     def from_pmodel(
@@ -122,7 +127,7 @@ class FaparLimitation:
         annual_mean_ca = compute_annual_mean_ca(...)
         annual_mean_chi = pmodel.optchi.chi.round(5)  # 0.8?
         annual_mean_vpd = compute_annual_mean_vpd(...)
-        annual_total_precip = compute_annual_total_precip(...)
+        annual_total_precip = compute_annual_total_precip(precip, datetimes)
 
         return cls(annual_total_potential_gpp, annual_mean_ca, annual_mean_chi,
                    annual_mean_vpd, annual_total_precip, aridity_index)
