@@ -9,6 +9,7 @@ import xarray as xr
 from numpy.typing import NDArray
 from scipy.special import lambertw
 
+from pyrealm.phenology.fapar_limitation import FaparLimitation
 from pyrealm.pmodel import (
     PModel,
     PModelEnvironment,
@@ -17,9 +18,6 @@ from pyrealm.pmodel import (
     memory_effect,
 )
 from pyrealm.pmodel.functions import calc_soilmstress_mengoli
-from pyrealm.phenology.fapar_limitation import (
-    FaparLimitation
-)
 
 
 # Local RLE function - will be in pyrealm.demography.growing_season
@@ -240,21 +238,27 @@ water_mm_to_mol = 1000 / 18
 annual_precip_molar = ann_total_P_fnet * water_mm_to_mol
 
 
-faparlim = FaparLimitation(
-    ann_total_A0_subdaily_penalised.data,  #annual_values["annual_PMod_sub_A0"].data,
-    annual_values["annual_mean_ca_in_GS"].data,
-    annual_values["annual_mean_chi_in_GS"].data,
-    annual_values["annual_mean_VPD_in_GS"].data,
-    annual_precip_molar,
+# faparlim = FaparLimitation(
+#     ann_total_A0_subdaily_penalised.data,  # annual_values["annual_PMod_sub_A0"].data,
+#     annual_values["annual_mean_ca_in_GS"].data,
+#     annual_values["annual_mean_chi_in_GS"].data,
+#     annual_values["annual_mean_VPD_in_GS"].data,
+#     annual_precip_molar,
+#     aridity_index.data,
+# )
+
+faparlim = FaparLimitation.from_pmodel(
+    de_gri_pmodel,
+    gsl_values, #de_gri_daily_values["growing_day"]
+    de_gri_hh_pd.axes[0] ,
+    de_gri_hh_xr["P_F"],
     aridity_index.data
 )
 
 # Calculate fapar_max and LAI_max
-fapar_max = xr.DataArray(faparlim.faparmax, dims='year',
-                         coords=annual_values.coords)
+fapar_max = xr.DataArray(faparlim.faparmax, dims="year", coords=annual_values.coords)
 
-lai_max = xr.DataArray(faparlim.laimax, dims='year',
-                         coords=annual_values.coords)
+lai_max = xr.DataArray(faparlim.laimax, dims="year", coords=annual_values.coords)
 
 # Calculate ratio of steady state LAI to steady state GPP
 m = (sigma * ann_total_GD * lai_max) / (ann_total_A0_subdaily_penalised * fapar_max)
