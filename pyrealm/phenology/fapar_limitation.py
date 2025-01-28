@@ -1,3 +1,7 @@
+"""Class to compute the fAPAR_max and annual peak Leaf Area Index (LAI)."""
+
+from typing import Self
+
 import numpy as np
 from numpy.ma.core import zeros
 from numpy.typing import NDArray
@@ -5,59 +9,75 @@ from numpy.typing import NDArray
 from pyrealm.pmodel import (
     PModel,
 )
-from pyrealm.splash.splash import SplashModel
 
 
-def get_annual_total(x, datetimes):
+def get_annual_total(x: NDArray, datetimes: NDArray[np.datetime64]) -> NDArray:
+    """Computes an array of the annual total of an entity x given datetimes."""
 
-    assert len(x) == len(datetimes.year)
+    assert len(x) == len(datetimes)
 
-    years = np.unique(datetimes.year)
+    all_years = [np.datetime64(i, "Y") for i in datetimes]
 
-    annual_x = zeros(len(years))
-
-    for i in range(len(years)):
-        annual_x[i] = sum(x[datetimes.year == years[i]])
-
-    return annual_x
-
-def get_annual_mean(x, datetimes):
-
-    assert len(x) == len(datetimes.year)
-
-    years = np.unique(datetimes.year)
+    years = np.unique(all_years)
 
     annual_x = zeros(len(years))
 
     for i in range(len(years)):
-        annual_x[i] = np.mean(x[datetimes.year == years[i]])
+        annual_x[i] = sum(x[all_years == years[i]].astype(np.int64))
 
     return annual_x
 
-def compute_annual_total_potential_gpp(gpp, datetimes):
+
+def get_annual_mean(x: NDArray, datetimes: NDArray[np.datetime64]) -> NDArray:
+    """Computes an array of the annual means of an entity x given datetimes."""
+
+    assert len(x) == len(datetimes)
+
+    all_years = [np.datetime64(i, "Y") for i in datetimes]
+
+    years = np.unique(all_years)
+
+    annual_x = zeros(len(years))
+
+    for i in range(len(years)):
+        annual_x[i] = np.mean(x[all_years == years[i]].astype(np.int64))
+
+    return annual_x
+
+
+def compute_annual_total_potential_gpp(
+    gpp: NDArray, datetimes: NDArray[np.datetime64]
+) -> NDArray:
+    """Returns the sum of annual GPPs."""
 
     return get_annual_total(gpp, datetimes)
 
 
-def compute_annual_mean_ca(ca, datetimes):
+def compute_annual_mean_ca(ca: NDArray, datetimes: NDArray[np.datetime64]) -> NDArray:
+    """Returns the annual mean ambient C02 partial pressure."""
 
     return get_annual_mean(ca, datetimes)
 
 
-def compute_annual_mean_vpd(vpd, datetimes):
+def compute_annual_mean_vpd(vpd: NDArray, datetimes: NDArray[np.datetime64]) -> NDArray:
+    """Returns the annual mean of the vapour pressure deficit."""
 
     return get_annual_mean(vpd, datetimes)
 
 
-def compute_annual_total_precip(precip, datetimes):
+def compute_annual_total_precip(
+    precip: NDArray, datetimes: NDArray[np.datetime64]
+) -> NDArray:
+    """Returns the sum of annual precipitation."""
 
     annual_precip = get_annual_total(precip, datetimes)
 
     return convert_precipitation_to_molar(annual_precip)
 
 
-def convert_precipitation_to_molar(precip_mm):
-    """Convert precipitation from mm/m2 to mol/m2:
+def convert_precipitation_to_molar(precip_mm: NDArray) -> NDArray:
+    """Convert precipitation from mm/m2 to mol/m2.
+
     - 1 mm/m2 = 1000000 mm3 = 1000 mL = 1 L
     - Molar mass of water = 18g
     - Assuming density = 1 (but really temp varying), molar volume = 18mL
@@ -71,14 +91,22 @@ def convert_precipitation_to_molar(precip_mm):
 
 
 class FaparLimitation:
+    r"""FaparLimitation class to compute fAPAR_max and LAI.
+
+    This class takes the annual total potential GPP and precipitation, the annual
+    mean CA, Chi and VPD, as well as the aridity index and some constants to compute
+    the annual peak fractional absorbed photosynthetically active radiation (
+    fAPAR_max) and annual peak Leaf Area Index (LAI).
+    """
+
     def __init__(
         self,
-        annual_total_potential_gpp: NDArray[float],
-        annual_mean_ca: NDArray[float],
-        annual_mean_chi: NDArray[float],
-        annual_mean_vpd: NDArray[float],
-        annual_total_precip: NDArray[float],
-        aridity_index: float,
+        annual_total_potential_gpp: NDArray[np.float64],
+        annual_mean_ca: NDArray[np.float64],
+        annual_mean_chi: NDArray[np.float64],
+        annual_mean_vpd: NDArray[np.float64],
+        annual_total_precip: NDArray[np.float64],
+        aridity_index: NDArray[np.float64],
         z: float = 12.227,
         k: float = 0.5,
     ) -> None:
@@ -121,6 +149,7 @@ class FaparLimitation:
 
         self.faparmax = -9999 * np.ones(np.shape(fapar_waterlim))
         self.energylim = -9999 * np.ones(np.shape(fapar_waterlim))
+        self.annual_precip_molar = annual_total_precip
 
         for i in range(len(fapar_waterlim)):
             if fapar_waterlim[i] < fapar_energylim[i]:
@@ -136,11 +165,11 @@ class FaparLimitation:
     def from_pmodel(
         cls,
         pmodel: PModel,
-        growing_season: NDArray[bool],
+        growing_season: NDArray[np.bool],
         datetimes: NDArray[np.datetime64],
-        precip: NDArray[float],
-        aridity_index
-    ):
+        precip: NDArray[np.float64],
+        aridity_index: NDArray[np.float64],
+    ) -> Self:
         r"""Get FaparLimitation from PModel input.
 
         Computes the input for fAPAR_max from the P Model and additional inputs.
@@ -151,10 +180,12 @@ class FaparLimitation:
               season by some definition and implementation.
             datetimes: Array of datetimes to consider.
             precip: Precipitation for given datetimes.
+            aridity_index: Climatological estimate of local aridity index.
         """
 
-        annual_total_potential_gpp = compute_annual_total_potential_gpp(pmodel.gpp,
-                                                                        datetimes)
+        annual_total_potential_gpp = compute_annual_total_potential_gpp(
+            pmodel.gpp, datetimes
+        )
         annual_mean_ca = compute_annual_mean_ca(pmodel.env.ca, datetimes)
         annual_mean_chi = get_annual_mean(pmodel.optchi.chi.round(5), datetimes)
         annual_mean_vpd = compute_annual_mean_vpd(pmodel.env.vpd, datetimes)
@@ -165,42 +196,6 @@ class FaparLimitation:
             annual_mean_ca,
             annual_mean_chi,
             annual_mean_vpd,
-            annual_total_precip.data,
-            aridity_index,
-        )
-
-    @classmethod
-    def from_pmodel_and_splash(
-        cls,
-        pmodel: PModel,
-        splash_model: SplashModel,
-        growing_season: NDArray[bool],
-    ):
-        r"""Get FaparLimitation from PModel and SPLASH model input.
-
-        Computes the input for fAPAR_max from the P Model, SPLASH model, and additional
-        inputs.
-
-        Args:
-            pmodel: pyrealm.pmodel.PModel
-            splash_model: pyrealm.splash.SplashModel
-            growing_season: Bool array indicating which times are within growing
-              season by some definition and implementation.
-        """
-
-        datetimes = splash_model.dates
-        annual_total_potential_gpp = compute_annual_total_potential_gpp(pmodel.gpp,
-                                                                        datetimes)
-        annual_mean_ca = compute_annual_mean_ca(pmodel.env.ca, datetimes)
-        annual_mean_chi = get_annual_mean(pmodel.optchi.chi.round(5), datetimes)  # 0.8?
-        annual_mean_vpd = compute_annual_mean_vpd(pmodel.env.vpd, datetimes)
-        annual_total_precip = splash_model.precip
-
-        return cls(
-            annual_total_potential_gpp,
-            annual_mean_ca,
-            annual_mean_chi,
-            annual_mean_vpd,
             annual_total_precip,
-            splash_model.aridity_index,
+            aridity_index,
         )

@@ -7,6 +7,7 @@ import numpy as np
 import pandas as pd
 import xarray as xr
 from numpy.typing import NDArray
+from pandas import DataFrame
 from scipy.special import lambertw
 
 from pyrealm.phenology.fapar_limitation import FaparLimitation
@@ -48,35 +49,59 @@ def run_length_encode(values: NDArray) -> tuple[NDArray[np.int_], NDArray]:
     return (run_lengths, values[change_points])
 
 
-# Load the site data
+def load_fluxnet_data(
+    fluxnet_site_datapath: str, fluxnet_hh_datapath: str
+) -> (tuple)[NDArray, DataFrame, DataFrame]:
+    """Load fluxnet site and half-hourly data.
+
+    This function loads the fluxnet data and performs some initial data wrangling.
+    It converts the time into datetime format, removes temps under 25°C, converts VPD
+    from hPa to Pa, and the PPFD from SWDOWN.
+
+    Args:
+        fluxnet_site_datapath: string for fluxnet site data path.
+        fluxnet_hh_datapath: string for fluxnet half-hourly data path.
+    """
+
+    # Load the site data
+    with open(fluxnet_site_datapath) as dpath:
+        de_gri_site_data = json.load(dpath)
+
+    # Load the half hourly data
+    de_gri_hh_pd = pd.read_csv(fluxnet_hh_datapath, na_values=["-9999" "-9999.0"])
+
+    # Calculate time as np.datetime64, set as the index and convert to xarray
+    de_gri_hh_pd["time"] = pd.to_datetime(
+        de_gri_hh_pd["TIMESTAMP_START"], format="%Y%m%d%H%M"
+    )
+    de_gri_hh_pd = de_gri_hh_pd.set_index("time")
+    de_gri_hh_xr = de_gri_hh_pd.to_xarray()
+
+    # # Blank out temperatures under 25°C
+    de_gri_hh_xr["TA_F"] = de_gri_hh_xr["TA_F"].where(de_gri_hh_xr["TA_F"] >= -25)
+
+    # # VPD from hPa to Pa
+    de_gri_hh_xr["VPD_F"] = de_gri_hh_xr["VPD_F"] * 100
+    # Pressure from kPa to Pa
+    de_gri_hh_xr["PA_F"] = de_gri_hh_xr["PA_F"] * 1000
+    # PPFD from SWDOWN
+    de_gri_hh_xr["PPFD"] = de_gri_hh_xr["SW_IN_F_MDS"] * 2.04
+
+    return de_gri_site_data, de_gri_hh_pd, de_gri_hh_xr
+
+
+########################################################################################
+
+# Use P Model for farpar_lim (if False the parameters will be handed in directly)
+use_pmodel = False
+
+# Get the fluxnet data
 fluxnet_site_datapath = "DE-GRI_site_data.json"
-with open(fluxnet_site_datapath) as dpath:
-    de_gri_site_data = json.load(dpath)
-
-# Load the half hourly data
 fluxnet_hh_datapath = "DE_GRI_hh_fluxnet_simple.csv"
-de_gri_hh_pd = pd.read_csv(
-    fluxnet_hh_datapath, na_values=["-9999" "-9999.0", -9999.0, -9999]
+
+de_gri_site_data, de_gri_hh_pd, de_gri_hh_xr = load_fluxnet_data(
+    fluxnet_site_datapath, fluxnet_hh_datapath
 )
-
-# Calculate time as np.datetime64, set as the index and convert to xarray
-de_gri_hh_pd["time"] = pd.to_datetime(
-    de_gri_hh_pd["TIMESTAMP_START"], format="%Y%m%d%H%M"
-)
-de_gri_hh_pd = de_gri_hh_pd.set_index("time")
-de_gri_hh_xr = de_gri_hh_pd.to_xarray()
-
-
-# # Blank out temperatures under 25°C
-de_gri_hh_xr["TA_F"] = de_gri_hh_xr["TA_F"].where(de_gri_hh_xr["TA_F"] >= -25)
-
-# # VPD from hPa to Pa
-de_gri_hh_xr["VPD_F"] = de_gri_hh_xr["VPD_F"] * 100
-# Pressure from kPa to Pa
-de_gri_hh_xr["PA_F"] = de_gri_hh_xr["PA_F"] * 1000
-# PPFD from SWDOWN
-de_gri_hh_xr["PPFD"] = de_gri_hh_xr["SW_IN_F_MDS"] * 2.04
-
 
 # Calculate the PModel photosynthetic environment
 env = PModelEnvironment(
@@ -96,7 +121,6 @@ de_gri_pmodel = PModel(
 de_gri_pmodel.estimate_productivity(
     fapar=np.ones_like(env.ca), ppfd=de_gri_hh_xr["PPFD"].to_numpy()
 )
-
 
 # Set up the datetimes of the observations and set the acclimation window
 scaler = SubdailyScaler(datetimes=de_gri_hh_xr["time"].to_numpy())
@@ -138,8 +162,6 @@ de_gri_daily_values = de_gri_daily_resampler.mean()
 
 # Upscale GPP from daily mean µmol m2 s1 to mol m2 day
 gpp_scale = (24 * 60 * 60) / 1e6
-
-de_gri_daily_values["PMod_A0_daily_total"] = de_gri_daily_values["PMod_A0"] * gpp_scale
 
 de_gri_daily_values["PMod_sub_A0_daily_total"] = (
     de_gri_daily_values["PMod_sub_A0"] * gpp_scale
@@ -186,10 +208,7 @@ de_gri_daily_values = de_gri_daily_values.assign(
     growing_day_filtered=("time", gsl_filtered)
 )
 
-
 # Calculate required annual values
-# - TODO Which source of precipitation data should we use? CRU is more consistent with
-#   the aridity index calculation and hence f_0, but we have site specific P as well.
 
 # GPP, precipitation and growing day totals across the whole year.
 ann_total_A0_subdaily_penalised = (
@@ -223,44 +242,38 @@ annual_values = xr.merge(
     join="left",
 )
 
-# Constants
-z = 12.227  # leaf costs, mol m2 year
-k = 0.5  # light extinction coefficient, -
-f_0 = 0.65 * np.exp(-0.604169 * np.log(aridity_index / 1.9) ** 2)
-sigma = 0.771
-
-# Convert precipitation from mm/m2 to mol/m2:
-# - 1 mm/m2 = 1000000 mm3 = 1000 mL = 1 L
-# - Molar mass of water = 18g
-# - Assuming density = 1 (but really temp varying), molar volume = 18mL
-# - So 1 mm/m2 = 1000 / 18 ~ 55.55 mols/m2
-water_mm_to_mol = 1000 / 18
-annual_precip_molar = ann_total_P_fnet * water_mm_to_mol
-
-
-# faparlim = FaparLimitation(
-#     ann_total_A0_subdaily_penalised.data,  # annual_values["annual_PMod_sub_A0"].data,
-#     annual_values["annual_mean_ca_in_GS"].data,
-#     annual_values["annual_mean_chi_in_GS"].data,
-#     annual_values["annual_mean_VPD_in_GS"].data,
-#     annual_precip_molar,
-#     aridity_index.data,
-# )
-
-faparlim = FaparLimitation.from_pmodel(
-    de_gri_pmodel,
-    gsl_values, #de_gri_daily_values["growing_day"]
-    de_gri_hh_pd.axes[0] ,
-    de_gri_hh_xr["P_F"],
-    aridity_index.data
-)
-
 # Calculate fapar_max and LAI_max
+
+if use_pmodel:
+    faparlim = FaparLimitation.from_pmodel(
+        de_gri_pmodel,
+        gsl_values,  # de_gri_daily_values["growing_day"]
+        de_gri_hh_pd.axes[0].to_numpy(),
+        de_gri_hh_xr["P_F"].data,
+        aridity_index.data,
+    )
+
+else:
+    faparlim = FaparLimitation(
+        ann_total_A0_subdaily_penalised.data,
+        annual_values["annual_mean_ca_in_GS"].data,
+        annual_values["annual_mean_chi_in_GS"].data,
+        annual_values["annual_mean_VPD_in_GS"].data,
+        ann_total_P_fnet.data,
+        aridity_index.data,
+    )
+
+
 fapar_max = xr.DataArray(faparlim.faparmax, dims="year", coords=annual_values.coords)
 
 lai_max = xr.DataArray(faparlim.laimax, dims="year", coords=annual_values.coords)
 
+annual_precip_molar = xr.DataArray(
+    faparlim.annual_precip_molar, dims="year", coords=annual_values.coords
+)
+
 # Calculate ratio of steady state LAI to steady state GPP
+sigma = 0.771
 m = (sigma * ann_total_GD * lai_max) / (ann_total_A0_subdaily_penalised * fapar_max)
 m.name = "m"
 
@@ -283,6 +296,7 @@ mu = (
 )
 
 # Calculate the Lambert W0 value, screen for non-zero imaginary parts, clip at zero
+k = 0.5  # light extinction coefficient, -
 Ls_term_1 = mu + (1 / k) * lambertw(-k * mu * np.exp(-k * mu), k=0)
 
 if not np.all(np.imag(Ls_term_1.data) == 0):
@@ -307,6 +321,7 @@ de_gri_hh_outputs.to_pandas().to_csv("outputs/pyrealm_hh_outputs.csv")
 de_gri_daily_values.to_pandas().to_csv("outputs/pyrealm_daily_outputs.csv")
 annual_values.to_pandas().to_csv("outputs/pyrealm_annual_outputs.csv")
 
+# Plot LAI
 plt.plot(de_gri_daily_values["time"], de_gri_daily_values["Ls_daily_lagged"])
 plt.xlabel("Year")
 plt.ylabel("Predicted LAI")
