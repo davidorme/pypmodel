@@ -68,7 +68,7 @@ def load_fluxnet_data(
         de_gri_site_data = json.load(dpath)
 
     # Load the half hourly data
-    de_gri_hh_pd = pd.read_csv(fluxnet_hh_datapath, na_values=["-9999" "-9999.0"])
+    de_gri_hh_pd = pd.read_csv(fluxnet_hh_datapath, na_values=["-9999", "-9999.0"])
 
     # Calculate time as np.datetime64, set as the index and convert to xarray
     de_gri_hh_pd["time"] = pd.to_datetime(
