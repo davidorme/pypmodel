@@ -1,10 +1,9 @@
 """Class to compute the fAPAR_max and annual peak Leaf Area Index (LAI)."""
 
-from typing import Self
-
 import numpy as np
 from numpy.ma.core import zeros
 from numpy.typing import NDArray
+from typing_extensions import Self
 
 from pyrealm.pmodel import (
     PModel,
