@@ -1,8 +1,10 @@
+"""Helper class for reading fluxnet data."""
+
 import pandas as pd
 
 de_gri_flux_hh = pd.read_csv(
     "../FLX_DE-Gri_FLUXNET2015_FULLSET_HH_2004-2014_1-4.csv",
-    na_values=["-9999", "-9999.0", -9999, -9999.0],
+    na_values=["-9999", "-9999.0"],
 )
 
 de_gri_flux_hh_subset = de_gri_flux_hh[

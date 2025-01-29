@@ -1,3 +1,5 @@
+"""Script to extract SPLASH records from CRU data for DE-Gri FluxNET site."""
+
 from pathlib import Path
 
 import xarray as xr
