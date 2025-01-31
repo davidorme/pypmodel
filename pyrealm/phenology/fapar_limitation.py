@@ -10,66 +10,96 @@ from pyrealm.pmodel import (
 )
 
 
-def get_annual_total(x: NDArray, datetimes: NDArray[np.datetime64]) -> NDArray:
+def get_annual_total(
+    x: NDArray, datetimes: NDArray[np.datetime64], growing_season: NDArray[np.bool]
+) -> NDArray:
     """Computes an array of the annual total of an entity x given datetimes."""
 
     assert len(x) == len(datetimes)
 
     all_years = [np.datetime64(i, "Y") for i in datetimes]
 
+    if len(x) != len(growing_season):
+        growing_season_resampled = zeros(len(x))
+        ratio = len(x) / len(growing_season)
+        for i in range(len(growing_season)):
+            for j in range(ratio):
+                growing_season_resampled[i * ratio + j] = growing_season[i]
+    else:
+        growing_season_resampled = growing_season
+
     years = np.unique(all_years)
 
     annual_x = zeros(len(years))
 
     for i in range(len(years)):
-        annual_x[i] = sum(x[all_years == years[i]].astype(np.int64))
+        annual_x[i] = sum(
+            x[growing_season_resampled & all_years == years[i]].astype(np.int64)
+        )
 
     return annual_x
 
 
-def get_annual_mean(x: NDArray, datetimes: NDArray[np.datetime64]) -> NDArray:
+def get_annual_mean(
+    x: NDArray, datetimes: NDArray[np.datetime64], growing_season: NDArray[np.bool]
+) -> NDArray:
     """Computes an array of the annual means of an entity x given datetimes."""
 
     assert len(x) == len(datetimes)
 
     all_years = [np.datetime64(i, "Y") for i in datetimes]
 
+    if len(x) != len(growing_season):
+        growing_season_resampled = zeros(len(x))
+        ratio = len(x) / len(growing_season)
+        for i in range(len(growing_season)):
+            for j in range(ratio):
+                growing_season_resampled[i * ratio + j] = growing_season[i]
+    else:
+        growing_season_resampled = growing_season
+
     years = np.unique(all_years)
 
     annual_x = zeros(len(years))
 
     for i in range(len(years)):
-        annual_x[i] = np.mean(x[all_years == years[i]].astype(np.int64))
+        annual_x[i] = np.mean(
+            growing_season_resampled & x[all_years == years[i]].astype(np.int64)
+        )
 
     return annual_x
 
 
 def compute_annual_total_potential_gpp(
-    gpp: NDArray, datetimes: NDArray[np.datetime64]
+    gpp: NDArray, datetimes: NDArray[np.datetime64], growing_season: NDArray[np.bool]
 ) -> NDArray:
     """Returns the sum of annual GPPs."""
 
-    return get_annual_total(gpp, datetimes)
+    return get_annual_total(gpp, datetimes, growing_season)
 
 
-def compute_annual_mean_ca(ca: NDArray, datetimes: NDArray[np.datetime64]) -> NDArray:
+def compute_annual_mean_ca(
+    ca: NDArray, datetimes: NDArray[np.datetime64], growing_season: NDArray[np.bool]
+) -> NDArray:
     """Returns the annual mean ambient C02 partial pressure."""
 
-    return get_annual_mean(ca, datetimes)
+    return get_annual_mean(ca, datetimes, growing_season)
 
 
-def compute_annual_mean_vpd(vpd: NDArray, datetimes: NDArray[np.datetime64]) -> NDArray:
+def compute_annual_mean_vpd(
+    vpd: NDArray, datetimes: NDArray[np.datetime64], growing_season: NDArray[np.bool]
+) -> NDArray:
     """Returns the annual mean of the vapour pressure deficit."""
 
-    return get_annual_mean(vpd, datetimes)
+    return get_annual_mean(vpd, datetimes, growing_season)
 
 
 def compute_annual_total_precip(
-    precip: NDArray, datetimes: NDArray[np.datetime64]
+    precip: NDArray, datetimes: NDArray[np.datetime64], growing_season: NDArray[np.bool]
 ) -> NDArray:
     """Returns the sum of annual precipitation."""
 
-    annual_precip = get_annual_total(precip, datetimes)
+    annual_precip = get_annual_total(precip, datetimes, growing_season)
 
     return convert_precipitation_to_molar(annual_precip)
 
@@ -183,12 +213,20 @@ class FaparLimitation:
         """
 
         annual_total_potential_gpp = compute_annual_total_potential_gpp(
-            pmodel.gpp, datetimes
+            pmodel.gpp, datetimes, growing_season
         )
-        annual_mean_ca = compute_annual_mean_ca(pmodel.env.ca, datetimes)
-        annual_mean_chi = get_annual_mean(pmodel.optchi.chi.round(5), datetimes)
-        annual_mean_vpd = compute_annual_mean_vpd(pmodel.env.vpd, datetimes)
-        annual_total_precip = compute_annual_total_precip(precip, datetimes)
+        annual_mean_ca = compute_annual_mean_ca(
+            pmodel.env.ca, datetimes, growing_season
+        )
+        annual_mean_chi = get_annual_mean(
+            pmodel.optchi.chi.round(5), datetimes, growing_season
+        )
+        annual_mean_vpd = compute_annual_mean_vpd(
+            pmodel.env.vpd, datetimes, growing_season
+        )
+        annual_total_precip = compute_annual_total_precip(
+            precip, datetimes, growing_season
+        )
 
         return cls(
             annual_total_potential_gpp,

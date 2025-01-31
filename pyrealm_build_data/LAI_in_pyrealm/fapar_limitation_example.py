@@ -93,7 +93,7 @@ def load_fluxnet_data(
 ########################################################################################
 
 # Use P Model for farpar_lim (if False the parameters will be handed in directly)
-use_pmodel = False
+use_pmodel = True
 
 # Get the fluxnet data
 fluxnet_site_datapath = "DE-GRI_site_data.json"
@@ -247,9 +247,9 @@ annual_values = xr.merge(
 if use_pmodel:
     faparlim = FaparLimitation.from_pmodel(
         de_gri_pmodel,
-        gsl_values,  # de_gri_daily_values["growing_day"]
+        de_gri_daily_values["growing_day"].data,
         de_gri_hh_pd.axes[0].to_numpy(),
-        de_gri_hh_xr["P_F"].data,
+        de_gri_daily_values["pre"].data,
         aridity_index.data,
     )
 
