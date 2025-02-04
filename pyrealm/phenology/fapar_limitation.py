@@ -14,36 +14,56 @@ def get_annual(
     growing_season: NDArray[np.bool],
     method: str,
 ) -> NDArray:
-    """Computes an array of the annual total or mean of an entity x given datetimes."""
+    """Computes an array of the annual total or mean of an entity x given datetimes.
 
+    Args:
+        x: Array of values to be converted to annual values. Should be either daily (
+        same datetimes as growing_season) or subdaily (same datetimes as datetimes
+        array)
+        datetimes: Datetimes of the measurements as np.datetime62 arrays.
+        growing_season: Bool array of days, indicating whether they are ain growing
+        season or not.
+        method: Either "total" (sum all values of the year) or "mean" (take the mean
+        of all values of the year)
+    """
+
+    # Extract years from datetimes
     all_years = [np.datetime64(i, "Y") for i in datetimes]
 
+    # Create scaler object to handle conversion between scales
     scaler = SubdailyScaler(datetimes)
     scaler.set_nearest(np.timedelta64(12, "h"))
 
     if len(x) == len(growing_season):
         daily_x = x
     elif len(x) == len(datetimes):
+        # Convert values to daily to match with growing_season
         daily_x = scaler.get_daily_means(x)
     else:
         raise ValueError("Input array does not fit datetimes nor growing_season array")
 
+    # Get rid of that extra dimension of size 1
     years_by_day = np.squeeze(scaler.get_window_values(np.asarray(all_years)))
+    # Which years are present?
     years = np.unique(all_years)
+
+    # Compute annual totals or means, only taking into account the days which are in
+    # growing season.
 
     annual_x = zeros(len(years))
 
-    for i in range(len(years)):
-        if method == "total":
+    if method == "total":
+        for i in range(len(years)):
             annual_x[i] = sum(
                 daily_x[growing_season & (years_by_day == years[i])].astype(np.int64)
             )
-        elif method == "mean":
+    elif method == "mean":
+        for i in range(len(years)):
             annual_x[i] = np.mean(
                 daily_x[growing_season & (years_by_day == years[i])].astype(np.int64)
             )
-        else:
-            raise ValueError("No valid method given for annual values")
+    else:
+        raise ValueError("No valid method given for annual values")
 
     return annual_x
 
