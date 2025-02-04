@@ -68,30 +68,6 @@ def get_annual(
     return annual_x
 
 
-def compute_annual_total_potential_gpp(
-    gpp: NDArray, datetimes: NDArray[np.datetime64], growing_season: NDArray[np.bool]
-) -> NDArray:
-    """Returns the sum of annual GPPs."""
-
-    return get_annual(gpp, datetimes, growing_season, "total")
-
-
-def compute_annual_mean_ca(
-    ca: NDArray, datetimes: NDArray[np.datetime64], growing_season: NDArray[np.bool]
-) -> NDArray:
-    """Returns the annual mean ambient C02 partial pressure."""
-
-    return get_annual(ca, datetimes, growing_season, "mean")
-
-
-def compute_annual_mean_vpd(
-    vpd: NDArray, datetimes: NDArray[np.datetime64], growing_season: NDArray[np.bool]
-) -> NDArray:
-    """Returns the annual mean of the vapour pressure deficit."""
-
-    return get_annual(vpd, datetimes, growing_season, "mean")
-
-
 def compute_annual_total_precip(
     precip: NDArray, datetimes: NDArray[np.datetime64], growing_season: NDArray[np.bool]
 ) -> NDArray:
@@ -210,18 +186,14 @@ class FaparLimitation:
             aridity_index: Climatological estimate of local aridity index.
         """
 
-        annual_total_potential_gpp = compute_annual_total_potential_gpp(
-            pmodel.gpp, datetimes, growing_season
+        annual_total_potential_gpp = get_annual(
+            pmodel.gpp, datetimes, growing_season, "total"
         )
-        annual_mean_ca = compute_annual_mean_ca(
-            pmodel.env.ca, datetimes, growing_season
-        )
+        annual_mean_ca = get_annual(pmodel.env.ca, datetimes, growing_season, "mean")
         annual_mean_chi = get_annual(
             pmodel.optchi.chi.round(5), datetimes, growing_season, "mean"
         )
-        annual_mean_vpd = compute_annual_mean_vpd(
-            pmodel.env.vpd, datetimes, growing_season
-        )
+        annual_mean_vpd = get_annual(pmodel.env.vpd, datetimes, growing_season, "mean")
         annual_total_precip = compute_annual_total_precip(
             precip, datetimes, growing_season
         )
