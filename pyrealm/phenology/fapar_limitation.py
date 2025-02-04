@@ -8,10 +8,13 @@ from typing_extensions import Self
 from pyrealm.pmodel import PModel, SubdailyScaler
 
 
-def get_annual_total(
-    x: NDArray, datetimes: NDArray[np.datetime64], growing_season: NDArray[np.bool]
+def get_annual(
+    x: NDArray,
+    datetimes: NDArray[np.datetime64],
+    growing_season: NDArray[np.bool],
+    method: str,
 ) -> NDArray:
-    """Computes an array of the annual total of an entity x given datetimes."""
+    """Computes an array of the annual total or mean of an entity x given datetimes."""
 
     all_years = [np.datetime64(i, "Y") for i in datetimes]
 
@@ -31,41 +34,16 @@ def get_annual_total(
     annual_x = zeros(len(years))
 
     for i in range(len(years)):
-        annual_x[i] = sum(
-            daily_x[growing_season & (years_by_day == years[i])].astype(np.int64)
-        )
-
-    return annual_x
-
-
-def get_annual_mean(
-    x: NDArray, datetimes: NDArray[np.datetime64], growing_season: NDArray[np.bool]
-) -> NDArray:
-    """Computes an array of the annual means of an entity x given datetimes."""
-
-    assert len(x) == len(datetimes)
-
-    all_years = [np.datetime64(i, "Y") for i in datetimes]
-
-    scaler = SubdailyScaler(datetimes)
-    scaler.set_nearest(np.timedelta64(12, "h"))
-
-    if len(x) == len(growing_season):
-        daily_x = x
-    elif len(x) == len(datetimes):
-        daily_x = scaler.get_daily_means(x)
-    else:
-        raise ValueError("Input array does not fit datetimes nor growing_season array")
-
-    years_by_day = np.squeeze(scaler.get_window_values(np.asarray(all_years)))
-    years = np.unique(all_years)
-
-    annual_x = zeros(len(years))
-
-    for i in range(len(years)):
-        annual_x[i] = np.mean(
-            daily_x[growing_season & (years_by_day == years[i])].astype(np.int64)
-        )
+        if method == "total":
+            annual_x[i] = sum(
+                daily_x[growing_season & (years_by_day == years[i])].astype(np.int64)
+            )
+        elif method == "mean":
+            annual_x[i] = np.mean(
+                daily_x[growing_season & (years_by_day == years[i])].astype(np.int64)
+            )
+        else:
+            raise ValueError("No valid method given for annual values")
 
     return annual_x
 
@@ -75,7 +53,7 @@ def compute_annual_total_potential_gpp(
 ) -> NDArray:
     """Returns the sum of annual GPPs."""
 
-    return get_annual_total(gpp, datetimes, growing_season)
+    return get_annual(gpp, datetimes, growing_season, "total")
 
 
 def compute_annual_mean_ca(
@@ -83,7 +61,7 @@ def compute_annual_mean_ca(
 ) -> NDArray:
     """Returns the annual mean ambient C02 partial pressure."""
 
-    return get_annual_mean(ca, datetimes, growing_season)
+    return get_annual(ca, datetimes, growing_season, "mean")
 
 
 def compute_annual_mean_vpd(
@@ -91,7 +69,7 @@ def compute_annual_mean_vpd(
 ) -> NDArray:
     """Returns the annual mean of the vapour pressure deficit."""
 
-    return get_annual_mean(vpd, datetimes, growing_season)
+    return get_annual(vpd, datetimes, growing_season, "mean")
 
 
 def compute_annual_total_precip(
@@ -99,7 +77,7 @@ def compute_annual_total_precip(
 ) -> NDArray:
     """Returns the sum of annual precipitation."""
 
-    annual_precip = get_annual_total(precip, datetimes, growing_season)
+    annual_precip = get_annual(precip, datetimes, growing_season, "total")
 
     return convert_precipitation_to_molar(annual_precip)
 
@@ -218,8 +196,8 @@ class FaparLimitation:
         annual_mean_ca = compute_annual_mean_ca(
             pmodel.env.ca, datetimes, growing_season
         )
-        annual_mean_chi = get_annual_mean(
-            pmodel.optchi.chi.round(5), datetimes, growing_season
+        annual_mean_chi = get_annual(
+            pmodel.optchi.chi.round(5), datetimes, growing_season, "mean"
         )
         annual_mean_vpd = compute_annual_mean_vpd(
             pmodel.env.vpd, datetimes, growing_season
