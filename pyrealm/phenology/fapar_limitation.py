@@ -5,9 +5,7 @@ from numpy.ma.core import zeros
 from numpy.typing import NDArray
 from typing_extensions import Self
 
-from pyrealm.pmodel import (
-    PModel,
-)
+from pyrealm.pmodel import PModel, SubdailyScaler
 
 
 def get_annual_total(
@@ -15,26 +13,26 @@ def get_annual_total(
 ) -> NDArray:
     """Computes an array of the annual total of an entity x given datetimes."""
 
-    assert len(x) == len(datetimes)
-
     all_years = [np.datetime64(i, "Y") for i in datetimes]
 
-    if len(x) != len(growing_season):
-        growing_season_resampled = zeros(len(x))
-        ratio = len(x) / len(growing_season)
-        for i in range(len(growing_season)):
-            for j in range(ratio):
-                growing_season_resampled[i * ratio + j] = growing_season[i]
-    else:
-        growing_season_resampled = growing_season
+    scaler = SubdailyScaler(datetimes)
+    scaler.set_nearest(np.timedelta64(12, "h"))
 
+    if len(x) == len(growing_season):
+        daily_x = x
+    elif len(x) == len(datetimes):
+        daily_x = scaler.get_daily_means(x)
+    else:
+        raise ValueError("Input array does not fit datetimes nor growing_season array")
+
+    years_by_day = np.squeeze(scaler.get_window_values(np.asarray(all_years)))
     years = np.unique(all_years)
 
     annual_x = zeros(len(years))
 
     for i in range(len(years)):
         annual_x[i] = sum(
-            x[growing_season_resampled & all_years == years[i]].astype(np.int64)
+            daily_x[growing_season & (years_by_day == years[i])].astype(np.int64)
         )
 
     return annual_x
@@ -49,22 +47,24 @@ def get_annual_mean(
 
     all_years = [np.datetime64(i, "Y") for i in datetimes]
 
-    if len(x) != len(growing_season):
-        growing_season_resampled = zeros(len(x))
-        ratio = len(x) / len(growing_season)
-        for i in range(len(growing_season)):
-            for j in range(ratio):
-                growing_season_resampled[i * ratio + j] = growing_season[i]
-    else:
-        growing_season_resampled = growing_season
+    scaler = SubdailyScaler(datetimes)
+    scaler.set_nearest(np.timedelta64(12, "h"))
 
+    if len(x) == len(growing_season):
+        daily_x = x
+    elif len(x) == len(datetimes):
+        daily_x = scaler.get_daily_means(x)
+    else:
+        raise ValueError("Input array does not fit datetimes nor growing_season array")
+
+    years_by_day = np.squeeze(scaler.get_window_values(np.asarray(all_years)))
     years = np.unique(all_years)
 
     annual_x = zeros(len(years))
 
     for i in range(len(years)):
         annual_x[i] = np.mean(
-            growing_season_resampled & x[all_years == years[i]].astype(np.int64)
+            daily_x[growing_season & (years_by_day == years[i])].astype(np.int64)
         )
 
     return annual_x
