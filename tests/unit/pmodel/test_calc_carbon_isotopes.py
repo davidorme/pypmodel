@@ -92,10 +92,11 @@ import pytest
 )
 def test_CalcCarbonIsotopes(pmodelenv_args, pmodel_args, expected):
     """Tests the CalcCarbonIsotopes class."""
-    from pyrealm.pmodel import CalcCarbonIsotopes, PModel, PModelEnvironment
+    from pyrealm.pmodel import CalcCarbonIsotopes, PModelEnvironment
+    from pyrealm.pmodel.new_pmodel import PModelNew
 
     env = PModelEnvironment(**pmodelenv_args)
-    pmodel = PModel(env, **pmodel_args)
+    pmodel = PModelNew(env, **pmodel_args)
     cci = CalcCarbonIsotopes(pmodel, d13CO2=np.array([-8.4]), D14CO2=np.array([19.2]))
 
     for attr in expected:

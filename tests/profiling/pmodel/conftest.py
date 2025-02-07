@@ -72,7 +72,7 @@ def pmodel_profile_data(pytestconfig):
         tc=tc, patm=patm, vpd=vpd, co2=co2, fapar=fapar, ppfd=ppfd
     )
 
-    yield pm_env, fapar, ppfd, local_time
+    yield pm_env, local_time
 
     print("\n***\nTearing down\n***\n")
 

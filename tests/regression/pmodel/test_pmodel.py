@@ -671,7 +671,8 @@ def test_pmodel_class_c3(
 ):
     """Test the PModel class for C3 plants."""
 
-    from pyrealm.pmodel import PModel, calc_soilmstress_stocker
+    from pyrealm.pmodel import calc_soilmstress_stocker
+    from pyrealm.pmodel.new_pmodel import PModelNew
 
     # TODO - this is a bit odd as rpmodel embeds stocker soilm in model where in pyrealm
     #        it is only applied post-GPP calculation. Maybe disentangle these.
@@ -682,23 +683,13 @@ def test_pmodel_class_c3(
     else:
         soilmstress = np.array([1.0])
 
-    ret = PModel(
+    ret = PModelNew(
         pmodelenv[environ],
         method_kphio=method_kphio,
         method_jmaxlim=luevcmax_method,
         method_arrhenius="kattge_knorr",
         reference_kphio=0.05,
     )
-
-    # Estimate productivity
-    if environ == "sc":
-        fapar = values["fapar_sc"]
-        ppfd = values["ppfd_sc"]
-    elif environ == "ar":
-        fapar = values["fapar_ar"]
-        ppfd = values["ppfd_ar"]
-
-    ret.estimate_productivity(fapar=fapar, ppfd=ppfd)
 
     # Find the expected values, extracting the combination from the request
     name = request.node.name
@@ -774,10 +765,10 @@ def test_pmodel_class_c4(
     """Test the PModel class for C4 plants."""
 
     from pyrealm.pmodel import (
-        PModel,
         PModelEnvironment,
         calc_soilmstress_stocker,
     )
+    from pyrealm.pmodel.new_pmodel import PModelNew
     from pyrealm.pmodel.quantum_yield import QuantumYieldTemperature
 
     if soilmstress:
@@ -800,7 +791,7 @@ def test_pmodel_class_c4(
         )
         kf = correction.kphio / 0.05
 
-    ret = PModel(
+    ret = PModelNew(
         pmodelenv[environ],
         method_kphio=method_kphio,
         method_jmaxlim="none",  # enforced in rpmodel.
@@ -808,16 +799,6 @@ def test_pmodel_class_c4(
         method_arrhenius="kattge_knorr",
         reference_kphio=0.05 * kf,  # See note above
     )
-
-    # Estimate productivity
-    if environ == "sc":
-        fapar = values["fapar_sc"]
-        ppfd = values["ppfd_sc"]
-    elif environ == "ar":
-        fapar = values["fapar_ar"]
-        ppfd = values["ppfd_ar"]
-
-    ret.estimate_productivity(fapar=fapar, ppfd=ppfd)
 
     # Find the expected values, extracting the combination from the request
     name = request.node.name
@@ -871,26 +852,10 @@ def test_pmodel_class_c4(
 def test_pmodel_summarise(capsys, values, pmodelenv):
     """Test the PModel summarize method."""
 
-    from pyrealm.pmodel import PModel
+    from pyrealm.pmodel.new_pmodel import PModelNew
 
-    ret = PModel(pmodelenv["sc"], reference_kphio=0.05)
+    ret = PModelNew(pmodelenv["sc"], reference_kphio=0.05)
 
-    # Test what comes back before estimate_productivity
-    ret.summarize()
-
-    out = capsys.readouterr().out
-
-    assert all(["\n" + var in out for var in ("lue", "iwue")])
-    assert not any(
-        ["\n" + var in out for var in ("gpp", "vcmax", "vcmax25", "rd", "gs", "jmax")]
-    )
-
-    fapar = values["fapar_sc"]
-    ppfd = values["ppfd_sc"]
-
-    ret.estimate_productivity(fapar=fapar, ppfd=ppfd)
-
-    # Test what comes back after estimate_productivity
     ret.summarize()
 
     out = capsys.readouterr().out
@@ -925,7 +890,8 @@ def test_lavergne_equivalence(tc, theta, variable_method, fixed_method, is_C4):
     # of temperature and soil moisture.
 
     from pyrealm.constants import PModelConst
-    from pyrealm.pmodel import PModel, PModelEnvironment
+    from pyrealm.pmodel import PModelEnvironment
+    from pyrealm.pmodel.new_pmodel import PModelNew
 
     env = PModelEnvironment(
         tc=tc,
@@ -936,7 +902,7 @@ def test_lavergne_equivalence(tc, theta, variable_method, fixed_method, is_C4):
     )
 
     # lavergne method
-    mod_theta = PModel(env, method_optchi=variable_method)
+    mod_theta = PModelNew(env, method_optchi=variable_method)
 
     # get equivalent model for fixed beta
     if is_C4:
@@ -953,7 +919,7 @@ def test_lavergne_equivalence(tc, theta, variable_method, fixed_method, is_C4):
         pmodel_const=const,
     )
 
-    mod_fixed = PModel(env, method_optchi=fixed_method)
+    mod_fixed = PModelNew(env, method_optchi=fixed_method)
 
     assert np.allclose(mod_theta.optchi.chi, mod_fixed.optchi.chi)
     assert np.allclose(mod_theta.optchi.mj, mod_fixed.optchi.mj)

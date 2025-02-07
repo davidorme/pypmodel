@@ -81,8 +81,6 @@ def be_vie_data_components(be_vie_data):
                 data = data.iloc[start:end]
 
             datetime_subdaily = data["time"].to_numpy()
-            ppfd_subdaily = data["ppfd"].to_numpy()
-            fapar_subdaily = data["fapar"].to_numpy()
             expected_gpp = data["GPP_JAMES"].to_numpy()
 
             # Create the environment including some randomly distributed water variables
@@ -93,16 +91,16 @@ def be_vie_data_components(be_vie_data):
                 vpd=data["vpd"].to_numpy(),
                 co2=data["co2"].to_numpy(),
                 patm=data["patm"].to_numpy(),
-                ppfd=ppfd_subdaily,
-                fapar=fapar_subdaily,
-                theta=rng.uniform(low=0.5, high=0.8, size=ppfd_subdaily.shape),
-                rootzonestress=rng.uniform(low=0.7, high=1.0, size=ppfd_subdaily.shape),
+                ppfd=data["ppfd"].to_numpy(),
+                fapar=data["fapar"].to_numpy(),
+                theta=rng.uniform(low=0.5, high=0.8, size=datetime_subdaily.shape),
+                rootzonestress=rng.uniform(
+                    low=0.7, high=1.0, size=datetime_subdaily.shape
+                ),
             )
 
             return (
                 subdaily_env,
-                ppfd_subdaily,
-                fapar_subdaily,
                 datetime_subdaily,
                 expected_gpp,
             )

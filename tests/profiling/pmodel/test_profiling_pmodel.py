@@ -7,20 +7,19 @@ import pytest
 @pytest.mark.profiling
 def test_profiling_pmodel(pmodel_profile_data):
     """Running the profiler on the pmodel."""
-    from pyrealm.pmodel import C3C4Competition, CalcCarbonIsotopes, PModel
+    from pyrealm.pmodel import C3C4Competition, CalcCarbonIsotopes
+    from pyrealm.pmodel.new_pmodel import PModelNew
 
     # Unpack feature components
-    pm_env, fapar, ppfd, _ = pmodel_profile_data
+    pm_env, _ = pmodel_profile_data
 
     # Profiling the PModel submodule
     # Standard C3 PModel
-    pmod_c3 = PModel(env=pm_env, reference_kphio=1 / 8)
-    pmod_c3.estimate_productivity(fapar=fapar, ppfd=ppfd)
+    pmod_c3 = PModelNew(env=pm_env, reference_kphio=1 / 8)
     pmod_c3.summarize()
 
     # Standard C4 PModel
-    pmod_c4 = PModel(env=pm_env, reference_kphio=1 / 8, method_optchi="c4")
-    pmod_c4.estimate_productivity(fapar=fapar, ppfd=ppfd)
+    pmod_c4 = PModelNew(env=pm_env, reference_kphio=1 / 8, method_optchi="c4")
     pmod_c4.summarize()
 
     # Profiling the Competition submodule

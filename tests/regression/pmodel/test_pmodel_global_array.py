@@ -37,9 +37,11 @@ def dataset():
     patm = calc_patm(elev)
 
     # Calculate p model environment
-    env = PModelEnvironment(tc=temp, vpd=vpd, co2=co2, patm=patm)
+    env = PModelEnvironment(
+        tc=temp, vpd=vpd, co2=co2, patm=patm, fapar=fapar, ppfd=ppfd
+    )
 
-    return env, fapar, ppfd
+    return env
 
 
 @pytest.mark.skipif(True, reason="Broken implementation in rpmodel 1.2.0")
@@ -62,8 +64,6 @@ def test_pmodel_global_array(dataset, ctrl):
 
     from pyrealm.pmodel import PModel
 
-    env, fapar, ppfd = dataset
-
     # Skip ftemp kphio is false
     if ctrl["do_ftemp_kphio"]:
         pytest.skip(
@@ -72,10 +72,7 @@ def test_pmodel_global_array(dataset, ctrl):
         )
 
     # Run the P model
-    model = PModel(env, kphio=0.05, do_ftemp_kphio=ctrl["do_ftemp_kphio"])
-
-    # Scale the outputs from values per unit iabs to realised values
-    scaled = model.unit_iabs.scale_iabs(fapar, ppfd)
+    model = PModel(dataset, kphio=0.05, do_ftemp_kphio=ctrl["do_ftemp_kphio"])
 
     # Load the R outputs
     test_dir = os.path.dirname(os.path.abspath(__file__))
@@ -111,8 +108,8 @@ def test_pmodel_global_array(dataset, ctrl):
     #
     # ds.close()
 
-    assert scaled.gpp.shape == gpp_r.shape
-    assert np.allclose(scaled.gpp, gpp_r, equal_nan=True)
+    assert model.gpp.shape == gpp_r.shape
+    assert np.allclose(model.gpp, gpp_r, equal_nan=True)
 
     # ## Run the P model in a location where the trimming in do_ftemp_kphio matters
     # patm = pmodel.calc_patm(1211)

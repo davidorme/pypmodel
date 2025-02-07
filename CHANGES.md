@@ -9,6 +9,29 @@ A new major release is planned but will iterate through release candidates in or
 make functionality available for testing while the new functionality and API changes are
 worked through. The changes below are provisional.
 
+- The `PModel` and `SubdailyPModel` classes have been extensively restructured to align
+  the attributes and methods and to remove repeated code. Many of these changes are
+  internal but the model signatures have changed and several of the attributes have been
+  renamed.
+
+  **Breaking changes**:
+
+  - The `SubdailyPModel` attributes giving actual predicted estimates of $V_{cmax}$ and
+    $J_{max}$ for observations (`subdaily_vcmax`, `subdaily_vcmax25`, `subdaily_jmax`
+    and `subdaily_jmax25`) have been renamed to simply `vcmax`, `vcmax25`, `jmax` and
+    `jmax25` to align with the observation estimates in `PModel`.
+  - The `SubdailyPModel` attributes giving the daily optimum and realised values for
+    $V_{cmax25}$, $J_{max25}$ and $\xi$ have been renamed for more clarity: `vcmax25_opt`,
+    `vcmax25_real`, `jmax25_opt`, `jmax25_real`, `xi_opt` and `xi_real` have changed to
+    `vcmax25_daily_optimal`,  `vcmax25_daily_realised`, `jmax25_daily_optimal`,
+    `jmax25_daily_realised`, `xi_daily_optimal` and `xi_daily_realised`.
+  - The `PModel.estimate_productivity` method was required to pass in FAPAR and PPFD to
+    scale up LUE predictions to GPP and to estimate other predictions. This has been
+    deprecated with addition of FAPAR and PPFD to the `PModelEnvironment` and GPP is now
+    calculated automatically.
+  - The `convert_pmodel_to_subdaily` function has been deprecated in favour of the new
+    `PModel.to_subdaily` method.
+
 - The `PModelEnvironment` class has been updated. It now requires that the user also
   provides `fapar` and `ppfd` data, currently with no default values. The provision of
   additional variables has also been made more flexible, allowing users to provide
