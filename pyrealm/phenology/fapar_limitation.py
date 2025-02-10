@@ -28,7 +28,7 @@ def get_annual(
     """
 
     # Extract years from datetimes
-    all_years = [np.datetime64(i, "Y") for i in datetimes]
+    all_years = datetimes.astype("datetime64[Y]")
 
     # Create scaler object to handle conversion between scales
     scaler = SubdailyScaler(datetimes)
