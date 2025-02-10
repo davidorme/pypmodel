@@ -264,9 +264,9 @@ else:
     )
 
 
-fapar_max = xr.DataArray(faparlim.faparmax, dims="year", coords=annual_values.coords)
+fapar_max = xr.DataArray(faparlim.fapar_max, dims="year", coords=annual_values.coords)
 
-lai_max = xr.DataArray(faparlim.laimax, dims="year", coords=annual_values.coords)
+lai_max = xr.DataArray(faparlim.lai_max, dims="year", coords=annual_values.coords)
 
 annual_precip_molar = xr.DataArray(
     faparlim.annual_precip_molar, dims="year", coords=annual_values.coords

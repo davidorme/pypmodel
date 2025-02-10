@@ -1,10 +1,10 @@
 """Class to compute the fAPAR_max and annual peak Leaf Area Index (LAI)."""
 
 import numpy as np
-from numpy.ma.core import zeros
 from numpy.typing import NDArray
 from typing_extensions import Self
 
+from pyrealm.constants import PhenologyConst
 from pyrealm.pmodel import PModel, SubdailyScaler
 
 
@@ -50,7 +50,7 @@ def get_annual(
     # Compute annual totals or means, only taking into account the days which are in
     # growing season.
 
-    annual_x = zeros(len(years))
+    annual_x = np.zeros(len(years))
 
     if method == "total":
         for i in range(len(years)):
@@ -110,8 +110,6 @@ class FaparLimitation:
         annual_mean_vpd: NDArray[np.float64],
         annual_total_precip: NDArray[np.float64],
         aridity_index: NDArray[np.float64],
-        z: float = 12.227,
-        k: float = 0.5,
     ) -> None:
         r"""Annual peak fractional absorbed photosynthetically active radiation (fAPAR).
 
@@ -129,11 +127,9 @@ class FaparLimitation:
             annual_total_precip: Aka P, annual total precipitation. [mol m^{-2}
              year^{-1}]
             aridity_index: Aka AI, climatological estimate of local aridity index.
-            z: accounts for the costs of building and maintaining leaves and the total
-              below-ground allocation required to support the nutrient demand of those
-              leaves. [mol m^{-2} year^{-1}]
-            k: Light extinction coefficient.
         """
+
+        self.phenology_const = PhenologyConst()
 
         #  f_0 is the ratio of annual total transpiration of annual total
         #  precipitation, which is an empirical function of the climatic Aridity Index
@@ -141,7 +137,9 @@ class FaparLimitation:
         b = 0.604169
         f_0 = 0.65 * np.exp(-b * np.log(aridity_index / 1.9))
 
-        fapar_energylim = 1.0 - z / (k * annual_total_potential_gpp)
+        fapar_energylim = 1.0 - self.phenology_const.z / (
+            self.phenology_const.k * annual_total_potential_gpp
+        )
         fapar_waterlim = (
             f_0
             * annual_total_precip
@@ -157,7 +155,7 @@ class FaparLimitation:
         self.annual_precip_molar = annual_total_precip
         """The annual precipitation in moles."""
 
-        self.laimax = -(1 / k) * np.log(1.0 - self.faparmax)
+        self.lai_max = -(1 / self.phenology_const.k) * np.log(1.0 - self.fapar_max)
 
     @classmethod
     def from_pmodel(
