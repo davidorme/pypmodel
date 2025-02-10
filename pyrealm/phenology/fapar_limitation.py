@@ -150,17 +150,12 @@ class FaparLimitation:
             / (1.6 * annual_mean_vpd * annual_total_potential_gpp)
         )
 
-        self.faparmax = -9999 * np.ones(np.shape(fapar_waterlim))
-        self.energylim = -9999 * np.ones(np.shape(fapar_waterlim))
+        self.fapar_max = np.minimum(fapar_waterlim, fapar_energylim)
+        """Maximum fapar given water or energy limitation."""
+        self.energy_limited = fapar_energylim  < fapar_waterlim
+        """Is fapar_max limited by water or energy."""
         self.annual_precip_molar = annual_total_precip
-
-        for i in range(len(fapar_waterlim)):
-            if fapar_waterlim[i] < fapar_energylim[i]:
-                self.faparmax[i] = fapar_waterlim[i]
-                self.energylim[i] = False
-            else:
-                self.faparmax[i] = fapar_energylim[i]
-                self.energylim[i] = True
+        """The annual precipitation in moles."""
 
         self.laimax = -(1 / k) * np.log(1.0 - self.faparmax)
 
