@@ -20,7 +20,7 @@ def get_annual(
         x: Array of values to be converted to annual values. Should be either daily (
         same datetimes as growing_season) or subdaily (same datetimes as datetimes
         array)
-        datetimes: Datetimes of the measurements as np.datetime62 arrays.
+        datetimes: Datetimes of the measurements as np.datetime64 arrays.
         growing_season: Bool array of days, indicating whether they are ain growing
         season or not.
         method: Either "total" (sum all values of the year) or "mean" (take the mean
