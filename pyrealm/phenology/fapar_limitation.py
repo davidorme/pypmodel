@@ -30,20 +30,22 @@ def get_annual(
     # Extract years from datetimes
     all_years = datetimes.astype("datetime64[Y]")
 
-    # Create scaler object to handle conversion between scales
-    scaler = SubdailyScaler(datetimes)
-    scaler.set_nearest(np.timedelta64(12, "h"))
-
-    if len(x) == len(growing_season):
+    if len(x) == len(growing_season):  # this is daily data
         daily_x = x
-    elif len(x) == len(datetimes):
+        n_days = len(x)
+        years_by_day = all_years.view()
+        obs_per_day = int(len(datetimes) / n_days)
+        years_by_day.shape = tuple([n_days, obs_per_day, *list(all_years.shape[1:])])
+    elif len(x) == len(datetimes):  # this is subdaily data
+        # Create scaler object to handle conversion between scales
+        scaler = SubdailyScaler(datetimes)
+        scaler.set_nearest(np.timedelta64(12, "h"))
         # Convert values to daily to match with growing_season
         daily_x = scaler.get_daily_means(x)
+        years_by_day = scaler.get_window_values(np.asarray(all_years))
     else:
         raise ValueError("Input array does not fit datetimes nor growing_season array")
 
-    # Get rid of that extra dimension of size 1
-    years_by_day = np.squeeze(scaler.get_window_values(np.asarray(all_years)))
     # Which years are present?
     years = np.unique(all_years)
 
@@ -55,12 +57,16 @@ def get_annual(
     if method == "total":
         for i in range(len(years)):
             annual_x[i] = sum(
-                daily_x[growing_season & (years_by_day == years[i])].astype(np.int64)
+                daily_x[growing_season & (years_by_day[:, 0] == years[i])].astype(
+                    np.int64
+                )
             )
     elif method == "mean":
         for i in range(len(years)):
             annual_x[i] = np.mean(
-                daily_x[growing_season & (years_by_day == years[i])].astype(np.int64)
+                daily_x[growing_season & (years_by_day[:, 0] == years[i])].astype(
+                    np.int64
+                )
             )
     else:
         raise ValueError("No valid method given for annual values")
@@ -102,6 +108,16 @@ class FaparLimitation:
     fAPAR_max) and annual peak Leaf Area Index (LAI).
     """
 
+    def _check_shapes(self) -> None:
+        """Internal class to check all the input arrays have the same size."""
+
+        assert len(self.annual_total_potential_gpp) == len(self.annual_mean_ca)
+        assert len(self.annual_mean_ca) == len(self.annual_mean_chi)
+        assert len(self.annual_mean_chi) == len(self.annual_mean_vpd)
+        assert len(self.annual_mean_vpd) == len(self.annual_total_precip)
+        if np.shape(self.aridity_index) != ():
+            assert len(self.annual_total_precip) == len(self.aridity_index)
+
     def __init__(
         self,
         annual_total_potential_gpp: NDArray[np.float64],
@@ -128,6 +144,15 @@ class FaparLimitation:
              year^{-1}]
             aridity_index: Aka AI, climatological estimate of local aridity index.
         """
+
+        self.annual_total_potential_gpp = annual_total_potential_gpp
+        self.annual_mean_ca = annual_mean_ca
+        self.annual_mean_chi = annual_mean_chi
+        self.annual_mean_vpd = annual_mean_vpd
+        self.annual_total_precip = annual_total_precip
+        self.aridity_index = aridity_index
+
+        self._check_shapes()
 
         self.phenology_const = PhenologyConst()
 
