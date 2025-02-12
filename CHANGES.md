@@ -41,7 +41,8 @@ worked through. The changes below are provisional.
   **Breaking change**: Need to specify `fapar` and `ppfd` in `PModelEnvironment`.
 
 - The `bounds_checker` function has been retired and replaced with the `BoundsChecker`
-  class, which provides more flexible and user-configurable bounds checking.
+  class, which provides more flexible and user-configurable bounds checking. This
+  functionality is used within other classes and does not introduce breaking changes.
 
 - A new system for providing alternative calculations of quantum yield ($\phi_0$) in the
   P Model, using the new `pyrealm.pmodel.quantum_yield` module. This module now provides
@@ -76,6 +77,21 @@ worked through. The changes below are provisional.
   settings, the reported values for $V_{cmax25}$ and $J_{max25}$ using `PModel` will
   change between v1 and v2, with the shift from `kattge_knorr` to `simple` as the
   default factors.
+
+- Many of the arguments to `SubdailyPModel` have been brought together into a new
+  `AcclimationModel` class. This replaces `SubdailyScaler` and bundles all of the
+  settings for acclimation into a single class. The following **breaking change**:
+  
+  - `SubdailyScaler` has been replaced with `AcclimationModel`.
+
+- The legacy implementation `SubdailyPModel_JAMES` has been deprecated. This
+  implementation duplicated the original Mengoli et al JAMES code. This was largely a
+  proof of concept implementation, misses some key parts of the acclimation model and
+  the internal calculations are sufficiently different that there is a high maintenance
+  cost to updating it the new API in version 2.0.0.
+
+  - The `fill_from` argument to `fill_daily_to_subdaily` was only required for
+    `SubdailyPModel_JAMES` and so this has also been deprecated.
 
 - The functions `calc_ftemp_kphio` and `calc_ftemp_inst_vcmax` provided narrow use cases
   with code duplication. They have been replaced by two broader Arrhenius functions:
