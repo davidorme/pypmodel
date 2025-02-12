@@ -1,11 +1,50 @@
 """Class to compute the fAPAR_max and annual peak Leaf Area Index (LAI)."""
 
+from calendar import leapdays
+
 import numpy as np
 from numpy.typing import NDArray
 from typing_extensions import Self
 
 from pyrealm.constants import PhenologyConst
 from pyrealm.pmodel import PModel, SubdailyScaler
+
+
+def check_datetimes(datetimes: NDArray[np.datetime64]) -> None:
+    """Check that the datetimes are in a valid format."""
+
+    deltas = datetimes[1:] - datetimes[:-1]
+    unique_deltas = np.unique(deltas)
+
+    if np.size(unique_deltas) > 1:
+        raise ValueError("datetimes are not evenly spaced.")
+
+    dates = datetimes.astype("datetime64[D]")
+    unique_dates, date_counts = np.unique(dates, return_counts=True)
+    obs_per_date = date_counts.max()
+
+    # all_years = datetimes.astype("datetime64[Y]")
+    # unique_years = np.unique(all_years)
+
+    no_leapyears = leapdays(
+        int(str(datetimes[0].astype("datetime64[Y]"))),
+        int(str(datetimes[-1].astype("datetime64[Y]"))),
+    )
+    year_remainder = len(unique_dates) % 365
+
+    # check that we have the right number of leap days
+    if year_remainder > no_leapyears:
+        raise ValueError("Datetimes to not cover full years.")
+
+    if obs_per_date > 1:
+        # subdaily
+
+        # Get the maximum number of observations per day and check it is evenly
+        # divisible by the number of seconds in a day.
+        obs_per_date = date_counts.max()
+        day_remainder = (24 * 60 * 60) % obs_per_date
+        if day_remainder:
+            raise ValueError("Datetime spacing is not evenly divisible into a day.")
 
 
 def get_annual(
@@ -205,6 +244,8 @@ class FaparLimitation:
             precip: Precipitation for given datetimes.
             aridity_index: Climatological estimate of local aridity index.
         """
+
+        check_datetimes(datetimes)
 
         annual_total_potential_gpp = get_annual(
             pmodel.gpp, datetimes, growing_season, "total"
